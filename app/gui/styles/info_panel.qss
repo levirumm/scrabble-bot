@@ -1,0 +1,52 @@
+/* Shared */
+
+QFrame[role="container"] {{
+    border: 2px solid {background[dark]};
+    border-radius: 10px;
+}}
+
+QFrame[role="card"] {{
+    border-radius: 10px;
+    background-color: {background[bg]};
+}}
+
+/* Profiles */
+QLabel[role="profile"]  {{
+    border-radius: 5px;
+    font-family: Sans Serif;
+    font-size: 13pt;
+    color: white;
+}}
+
+QLabel[role="profile"][variant="player"] {{
+    border: 1px solid {cell[hover_blank_cell]};
+    background-color: {cell[blank_cell]};
+}}
+
+QLabel[role="profile"][variant="bot"] {{
+    border 1px solid {cell[hover_triple_letter]};
+    background-color: {cell[triple_letter]};
+}}
+
+
+/* Score board */
+QFrame[role="center_line"] {{
+    color: {background[dark]};
+}}
+
+
+/* Turn history */
+QScrollArea QWidget {{
+    background-color: {background[light]};
+}}
+
+
+/* Turn card */
+TurnCard QWidget {{
+    border-radius: 10px;
+    background-color: {background[bg]};
+}}
+
+TurnCard[variant="skip"] QWidget{{
+    background-color: {background[dark]};
+}}

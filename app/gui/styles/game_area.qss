@@ -1,0 +1,158 @@
+/* Button panel */
+
+QPushButton[role="button"] {{
+    background-color: {background[bg]};
+    border-radius: 5px;
+    border: 1px solid {border[bd]};
+    color: {text[text]};
+    font-family: Sans Serif;
+    font-size: 12pt;
+}}
+
+QPushButton[role="button"]:hover {{
+    background-color: #c3c4c4;
+}}
+
+QPushButton[role="button"]:pressed {{
+    background-color: #b0b1b1;
+}}
+
+QPushButton[role="button"][variant="submit"] {{
+    background-color: {cell[blank_cell]};
+    border: 1px solid {cell[hover_blank_cell]};
+    color: {background[light]};
+}}
+
+QPushButton[role="button"][variant="submit"]:hover {{
+    background-color: {cell[hover_blank_cell]};
+}}
+
+QPushButton[role="button"][variant="submit"]:pressed {{
+    background-color: #05341c;
+}}
+
+/* Board Styling */
+
+QFrame[variant="board_border"] {{
+    border: 12px solid {board[board_border]};
+    background-color: {board[cell_border]};
+}}
+
+
+/* Cell Styling */
+
+/* Blank Cell */
+CellWidget {{
+    background-color: {cell[blank_cell]};
+    border-radius: 2px;
+}}
+
+CellWidget[tile_hover=true] {{
+    background-color: {cell[hover_blank_cell]};
+}}
+
+CellWidget[tile_hover=false] {{
+    background-color: {cell[blank_cell]};
+}}
+
+/* Double Letter */
+CellWidget[variant=double_letter] {{
+background-color: {cell[double_letter]};
+}}
+
+CellWidget[variant=double_letter][tile_hover=true] {{
+    background-color: {cell[hover_double_letter]};
+}}
+
+CellWidget[variant=double_letter][tile_hover=false] {{
+    background-color: {cell[double_letter]};
+}}
+
+/* Triple Letter */
+CellWidget[variant=triple_letter] {{
+    background-color: {cell[triple_letter]};
+}}
+
+CellWidget[variant=triple_letter][tile_hover=true] {{
+    background-color: {cell[hover_triple_letter]};
+}}
+
+CellWidget[variant=triple_letter][tile_hover=false] {{
+    background-color: {cell[triple_letter]};
+}}
+
+/* Double Word */
+CellWidget[variant=double_word] {{
+    background-color: {cell[double_word]};
+}}
+
+CellWidget[variant=double_word][tile_hover=true] {{
+    background-color: {cell[hover_double_word]};
+}}
+
+CellWidget[variant=double_word][tile_hover=false] {{
+    background-color: {cell[double_word]};
+}}
+
+/* Triple Word */
+CellWidget[variant=triple_word] {{
+    background-color: {cell[triple_word]};
+}}
+
+CellWidget[variant=triple_word][tile_hover=true] {{
+    background-color: {cell[hover_triple_word]};
+}}
+
+CellWidget[variant=triple_word][tile_hover=false] {{
+    background-color: {cell[triple_word]};
+}}
+ 
+
+/* Tile Styling */
+
+TileWidget {{
+    color: {tile[tile_text]};
+    background-color: {tile[tile_color]};
+    border: 2px solid {tile[tile_border]};
+}}
+
+TileWidget[state="pending"] {{
+    background-color: {tile[pending]};
+}}
+
+TileWidget[state="normal"] {{
+    background-color: {tile[tile_color]};
+}}
+
+JokerTile {{
+    color: {cell[triple_word]};
+}}
+
+
+/* Rack Styling */
+
+/* Rack slot */
+RackSlot {{
+    background-color: {rackslot[rackslot]};
+    border-radius: 3px;
+}}
+
+RackSlot[tile_hover=true] {{
+    background-color: {rackslot[hover_rackslot]};
+}}
+
+RackSlot[tile_hover=false] {{
+    background-color: {rackslot[rackslot]};
+}}
+
+/* Rack */
+QWidget[role="rack"] {{
+    background-color: {background[light]};
+    border-radius: 10px;
+}}
+
+QPushButton[role="recall"] {{
+    border: 1px solid {border[bd]};
+    background-color: {background[dark]};
+    border-radius: 3px;
+}}

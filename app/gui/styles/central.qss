@@ -1,0 +1,32 @@
+QWidget[role="bg"] {{
+    background-color: {background[dark]};
+}}
+
+QFrame[role="line"] {{
+    color: {text[muted]};
+}}
+
+QFrame[role="top_card"] {{
+    background-color: white;
+    border-radius: 15px;
+}}
+
+
+/* Labels */
+
+QLabel {{
+    font-family: Sans Serif;
+    color: {text[text]};
+}}
+
+QLabel[role="heading"] {{font-size: 20pt;}}
+
+QLabel[role="sub_heading"] {{font-size: 13pt;}}
+
+QLabel[role="normal"] {{font-size: 11pt;}}
+
+QLabel[role="small"] {{font-size: 9pt;}}
+
+QLabel[variant="muted"] {{color: {text[muted]};}}
+
+QLabel[variant="warning"] {{color: {text[warning]};}}

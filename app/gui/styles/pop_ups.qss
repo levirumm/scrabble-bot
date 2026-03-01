@@ -1,0 +1,22 @@
+/* Letter Select */
+
+QLabel[role=joker_icon] {{
+    background-color: {cell[triple_word]};
+    border: 1px solid {cell[hover_triple_word]};
+    border-radius: 10px;
+}}
+
+QPushButton[role=letter_button] {{
+    background-color: {background[bg]};
+    border-radius: 5px;
+    font-family: Sans Serif;
+    font-size: 12pt;
+}}
+
+QPushButton[role=letter_button]:hover {{
+    background-color: {background[dark]};
+}}
+
+QPushButton[role=letter_button]:pressed {{
+    background-color: #cdcdcd;
+}}

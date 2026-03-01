@@ -1,0 +1,17 @@
+QFrame[role="round_card"] {{
+    background-color: white;
+    border-radius: 32px;
+}}
+
+QPushButton[role="icon"] {{
+    background-color: white;
+    border-radius: 22px;
+}}
+
+QPushButton[role="icon"]:hover {{
+    background-color: {background[bg]};
+}}
+
+QPushButton[role="icon"]:pressed {{
+    background-color: {background[dark]};
+}}
