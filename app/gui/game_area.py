@@ -28,8 +28,9 @@ class GameArea(QObject):
     """
     # Button panel
     resignPressed = Signal()
-    submitPressed = Signal()
     skipPressed = Signal()
+    swapPressed = Signal()
+    submitPressed = Signal()
 
     # Tile events
     tilePlaced = Signal(int, int, Tile)
@@ -64,8 +65,9 @@ class GameArea(QObject):
 
         # Connect slots to button panel signals
         self._skip_button.clicked.connect(self._on_skip)
-        self._swap_button.clicked.connect(self._on_swap)
-
+        self._swap_button.clicked.connect(
+            lambda: self.swapPressed.emit()
+        )
         self._submit_button.clicked.connect(
             lambda: self.submitPressed.emit()
         )
@@ -88,9 +90,6 @@ class GameArea(QObject):
     
     def recall(self) -> None:
         self._rack.recall()
-    
-    def _on_swap(self) -> None:
-        pass
 
     def _on_skip(self) -> None:
         self._board.update_pending()

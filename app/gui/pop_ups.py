@@ -124,6 +124,10 @@ class TileSwap(QDialog, Ui_tile_swap):
         ui = Ui_tile_swap()
         ui.setupUi(self)
 
+        ui.selection_count.setProperty("role", "normal")
+        ui.selection_count.setProperty("variant", "muted")
+        ui.selection_count.setText("0 Selected")
+
         self._render_window(ui)
 
     def _render_window(self, ui: Ui_tile_swap) -> None:
@@ -137,3 +141,6 @@ class TileSwap(QDialog, Ui_tile_swap):
             "role", "joker_icon"
         )"""
         ui.title.setProperty("role", "sub_heading")
+
+    def _render_tiles(self, ui: Ui_tile_swap, tiles: list[Tile]) -> None:
+        pass

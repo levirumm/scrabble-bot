@@ -9,46 +9,33 @@ from app.model.constants import (
 from app.model.trie import Trie
 
 
-class ScrabbleBot:
+class MoveFinder:
+    """
+    Finds highest scoring moves given board and letter 
+    rack.
+    """
     def __init__(
             self, board: ScrabbleBoard, trie: Trie, 
             move_processor: "MoveProcessor" # type: ignore
         ) -> None:
-        # Game objects
         self._board: ScrabbleBoard = board
-        self._rack: list[Tile] = []
-
-        # Logical objects
         self._move_processor = move_processor
         self._trie: Trie = trie
     
-    def remove_used_tiles(self, tiles: list[TilePlacement]) -> None:
-        """Removes used tiles from letter rack."""
-        for tile in tiles:
-            if tile.tile.is_blank:
-                self._rack.remove(
-                    next(tile for tile in self._rack if tile.is_blank)
-                )
-            else:
-                self._rack.remove(tile.tile)
-    
-    def populate_rack(self, tiles: list[Tile]) -> None:
-        """Adds tiles to letter rack."""
-        self._rack.extend(tiles)
-    
-    def get_move(self) -> Move:
+    def get_move(self, rack: list[Tile]) -> Move:
         """Finds and returns highest scoring move."""
-        possible = (self._get_possible_words())
         best_score: int = 0
         best_word: FormedWord | None = None
 
-        # Get best possible bot move
+        # Get highest scoring bot move
+        possible: list[FormedWord] = (
+            self._get_possible_words(rack)
+        )
         for word in possible:
             score = self._move_processor.get_score(word)
             if score > best_score:
                 best_score = score
                 best_word = word
-        
         if not best_word:
             placed_tiles = []
         else:
@@ -60,33 +47,43 @@ class ScrabbleBot:
             ]
         return Move(placed_tiles, best_score)
 
-    def _get_possible_words(self) -> list[FormedWord]:
+    def _get_possible_words(self, rack: list[Tile]) -> list[FormedWord]:
         """Returns all possible words Scrabble bot can make."""
         if self._board.is_blank:
             # Lazy approach: Start word from center cell
+            # Does not return necessarily highest scoring move
             center: int = BOARD_SIZE // 2
             line = self._board.board[center]
             return (
-                self._get_index_words(line, center, row=True)
+                self._get_index_words(
+                    rack, line, center, row=True
+                )
             )
 
         placements: list[FormedWord] = []
 
         # Check all rows for possible placements
         for row in self._board.board:
-            placements.extend(self._get_line_words(row, is_row=True))
+            placements.extend(
+                self._get_line_words(rack, row, is_row=True)
+            )
         
         # Check all columns for possible placements
         for c in range(BOARD_SIZE):
             col = [self._board.board[i][c] for i in range(BOARD_SIZE)]
-            placements.extend(self._get_line_words(col, is_row=False))
+            placements.extend(
+                self._get_line_words(rack, col, is_row=False)
+            )
         
         return placements
     
     def _get_line_words(
-            self, line: list[Cell], is_row: bool
+            self, rack: list[Tile], line: list[Cell], 
+            is_row: bool
         ) -> list[FormedWord]:
-        """Returns all possible words that can be made in line."""
+        """
+        Returns all possible words that can be made in line.
+        """
         placements: list[FormedWord] = []
 
         # Get indices of possible starting cells
@@ -100,14 +97,17 @@ class ScrabbleBot:
         # Get possible words from each index
         for index in starting_indices:
             placements.extend(
-                self._get_index_words(line, index, is_row)
+                self._get_index_words(rack, line, index, is_row)
             )
         return placements
                 
     def _get_starting_indices(
             self, line: list[Cell], row: bool
         ) -> list[int]:
-        """Returns indices of cells from which a new word could start."""
+        """
+        Returns indices of cells from which a new word could 
+        start.
+        """
         starting_indices: list[int] = []
         reach: int = 0
 
@@ -150,27 +150,30 @@ class ScrabbleBot:
         return starting_indices
 
     def _get_index_words(
-            self, line: list[Cell], idx: int, row: bool
+            self, rack: list[Tile], line: list[Cell], 
+            idx: int, row: bool
         ) -> list[FormedWord]:
         """
-        Returns all words that can be made starting on given index.
+        Returns all words that can be made starting on given 
+        index.
         """
-        search = MoveSearch(
-            root=self._trie.root, rack=self._rack, line=line, 
+        search = RecursiveSearch(
+            root=self._trie.root, rack=rack, line=line, 
             idx=idx, is_row=row, is_blank=self._board.is_blank, 
             trie=self._trie
         )
         return search.get_all()
 
 
-class MoveSearch:
+class RecursiveSearch:
     """
     Uses recursive algorithm to search all word placements 
     in a board line from a given index.
     """
     def __init__(
-            self, root: TrieNode, rack: list[Tile], line: list[Cell], 
-            idx: int, is_row: bool, is_blank: bool, trie: Trie
+            self, root: TrieNode, rack: list[Tile], 
+            line: list[Cell], idx: int, is_row: bool, 
+            is_blank: bool, trie: Trie
         ) -> None:
         self._line: list[Cell] = line
         self._is_row: bool = is_row

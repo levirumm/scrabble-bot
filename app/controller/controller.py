@@ -15,18 +15,12 @@ class ScrabbleController:
         self._view: ScrabbleView = view
         self._model: ScrabbleModel = model
 
-        # Initiate full letter racks for player and bot
-        player_tiles = self._model.select_tiles(RACK_SLOTS)
-        bot_tiles = self._model.select_tiles(RACK_SLOTS)
-        self._view.update_player_rack(player_tiles)
-        self._model.update_bot_rack(bot_tiles)
-
-        # Update info panel to match model
-        self._view.update_info_panel(self._model.game_state)
+        self._start_game()
 
         # Connect slots to button panel
-        self._view.game_area.submitPressed.connect(self._on_submit)
         self._view.game_area.skipPressed.connect(self._on_skip)
+        self._view.game_area.swapPressed.connect(self._on_swap)
+        self._view.game_area.submitPressed.connect(self._on_submit)
 
         # Connect slots to game events
         self._view.game_area.tilePlaced.connect(
@@ -36,22 +30,47 @@ class ScrabbleController:
             self._on_tile_removed
         )
     
+    def _on_tile_placed(self, row: int, col: int, tile: Tile) -> None:
+        self._model.board.place_tile(row, col, tile)
+    
+    def _on_tile_removed(self, row: int, col: int) -> None:
+        self._model.board.remove_tile(row, col)
+    
     def _on_submit(self) -> None:
+        """Processes player's move."""
         self._turn(players_turn=True)
     
+    def _on_swap(self) -> None:
+        self._view.open_tile_swap(self._model.player_rack)
+    
     def _on_skip(self) -> None:
+        """
+        Recalls tiles, skips player's turn, and initiates 
+        bot's turn.
+        """
         self._view.game_area.recall()
         self._model.skip()
         self._view.update_turn_history(
             self._model.turn, players=True
         )
         self._turn(players_turn=False)
-        
-    def _on_tile_placed(self, row: int, col: int, tile: Tile) -> None:
-        self._model.board.place_tile(row, col, tile)
     
-    def _on_tile_removed(self, row: int, col: int) -> None:
-        self._model.board.remove_tile(row, col)
+    def _start_game(self) -> None:
+        """
+        Set initial conditions of Scrabble game.
+        """
+        # Initiate full letter racks for player and bot
+        player_tiles = self._model.select_tiles(RACK_SLOTS)
+        bot_tiles = self._model.select_tiles(RACK_SLOTS)
+
+        self._model.update_rack(players=True, new_tiles=player_tiles)
+        self._model.update_rack(players=False, new_tiles=bot_tiles)
+
+        # Update letter rack widget
+        self._view.update_player_rack(player_tiles)
+
+        # Update info panel to match model
+        self._view.update_info_panel(self._model.game_state)
 
     def _turn(self, players_turn: bool) -> None:
         """Gets move from board, processes and applies if valid."""
@@ -81,6 +100,11 @@ class ScrabbleController:
         )
         used_tiles = result.move.placements
 
+        # Update letter rack of move maker
+        self._model.update_rack(
+            players_turn, new_tiles, used_tiles
+        )
+
         # Update info panel and turn histroy
         game_state = self._model.game_state
         self._view.update_info_panel(game_state)
@@ -101,7 +125,6 @@ class ScrabbleController:
             self._turn(players_turn=False)
         else:
             self._view.apply_bot_move(result.move.placements)
-            self._model.update_bot_rack(new_tiles, used_tiles)
     
     def _formed_words_to_strings(
             self, formed_words: list[FormedWord | None]

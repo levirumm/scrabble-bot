@@ -62,10 +62,23 @@ class Ui_tile_swap(object):
 
         self.verticalLayout_2.addWidget(self.title)
 
+        self.selection_count = QLabel(self.window_frame)
+        self.selection_count.setObjectName(u"selection_count")
+        self.selection_count.setAlignment(Qt.AlignCenter)
+
+        self.verticalLayout_2.addWidget(self.selection_count)
+
         self.tile_container = QFrame(self.window_frame)
         self.tile_container.setObjectName(u"tile_container")
         self.tile_container.setFrameShape(QFrame.StyledPanel)
         self.tile_container.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_3 = QVBoxLayout(self.tile_container)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.tile_layout = QHBoxLayout()
+        self.tile_layout.setObjectName(u"tile_layout")
+
+        self.verticalLayout_3.addLayout(self.tile_layout)
+
 
         self.verticalLayout_2.addWidget(self.tile_container)
 
@@ -101,7 +114,8 @@ class Ui_tile_swap(object):
         tile_swap.setWindowTitle(QCoreApplication.translate("tile_swap", u"Dialog", None))
         self.swap_icon.setText("")
         self.title.setText(QCoreApplication.translate("tile_swap", u"Select Tiles to Swap", None))
-        self.swap_button.setText(QCoreApplication.translate("tile_swap", u"Swap & Skip", None))
+        self.selection_count.setText("")
+        self.swap_button.setText(QCoreApplication.translate("tile_swap", u"Swap and Skip", None))
         self.cancel_button.setText(QCoreApplication.translate("tile_swap", u"Cancel", None))
     # retranslateUi
 

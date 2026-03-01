@@ -89,6 +89,16 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="selection_count">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QFrame" name="tile_container">
         <property name="frameShape">
          <enum>QFrame::StyledPanel</enum>
@@ -96,6 +106,11 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <layout class="QHBoxLayout" name="tile_layout"/>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -110,7 +125,7 @@
          <item>
           <widget class="QPushButton" name="swap_button">
            <property name="text">
-            <string>Swap &amp; Skip</string>
+            <string>Swap and Skip</string>
            </property>
           </widget>
          </item>

@@ -8,6 +8,7 @@ from app.gui.palette.palette import PALETTE
 from app.gui.button_console import ButtonConsole
 from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
+from app.gui.pop_ups import TileSwap
 from app.gui.pop_ups import LetterSelect
 from pathlib import Path
 
@@ -51,6 +52,10 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     def game_area(self) -> GameArea:
         """Exposes game area to controller."""
         return self._game_area
+
+    def open_tile_swap(self, tiles: list[Tile]) -> None:
+        tile_swap = TileSwap(self, tiles)
+        result = tile_swap.exec()
     
     def _open_letter_select(self, tile: QObject) -> None:
         """Opens letter select menu for setting joker tile."""

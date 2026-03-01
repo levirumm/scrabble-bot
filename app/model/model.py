@@ -1,5 +1,5 @@
 from app.model.game_objects import ScrabbleBoard, LetterBag
-from app.model.scrabble_bot import ScrabbleBot
+from app.model.move_finder import MoveFinder
 from app.model.types import (
     Cell, CellType, CellState, Tile, ValidationFlags, 
     ValidationResult, FormedWords, FormedWord, 
@@ -22,28 +22,21 @@ class ScrabbleModel:
         self._turn: int = 0
         self._player_points: int = 0
         self._bot_points: int = 0
-
-        # Game objects
+        self._player_rack: list[Tile] = []
+        self._bot_rack: list[Tile] = []
         self._board = ScrabbleBoard()
         self._letter_bag = LetterBag()
 
-        # Trie structure
+        # Logicall objects
         self._trie = Trie()
-
-        # Move processor
         self._move_processor = MoveProcessor(
             self._board, self._trie
         )
-
-        # Board restrictor
         self._restrictor = BoardRestrictor(
             self._board, self._trie, self._move_processor
         )
-
-        # Scrabble Bot
-        self._scrabble_bot = ScrabbleBot(
-            self._board, self._trie,
-            self._move_processor
+        self._move_finder = MoveFinder(
+            self._board, self._trie, self._move_processor
         )
 
     @property
@@ -53,6 +46,10 @@ class ScrabbleModel:
     @property
     def turn(self) -> int:
         return self._turn
+    
+    @property
+    def player_rack(self) -> list[Tile]:
+        return self._player_rack
     
     @property
     def game_state(self) -> GameState:
@@ -71,24 +68,49 @@ class ScrabbleModel:
     def select_tiles(self, selections: int) -> list[Tile]:
         return self._letter_bag.select(selections)
 
-    def update_bot_rack(
-            self, new_tiles: list[Tile], 
+    def update_rack(
+            self, players: bool, new_tiles: list[Tile], 
             used_tiles: list[TilePlacement] | None = None
-        ) -> None: 
+        ) -> None:
         """
-        Removes used tiles and adds new tiles to bot rack.
+        Removes used tiles from move maker's rack and 
+        adds new tiles.
         """
         if used_tiles:
-            self._scrabble_bot.remove_used_tiles(used_tiles)
-        self._scrabble_bot.populate_rack(new_tiles)
+            self._remove_used_tiles(players, used_tiles)
+
+        if players:
+            self._player_rack.extend(new_tiles)
+        else:
+            self._bot_rack.extend(new_tiles)
+    
+    def _remove_used_tiles(
+            self, players: bool, tiles: list[TilePlacement]
+        ) -> None:
+        """Removes used tiles from corresponding letter rack."""
+        new_rack = (
+            self._player_rack if players else self._bot_rack
+        )
+        for tile in tiles:
+            if not tile.tile.is_blank:
+                new_rack.remove(tile.tile)
+                continue
+            new_rack.remove(
+                next(tile for tile in new_rack if tile.is_blank)
+            )
+        if players:
+            self._player_rack = new_rack
+        else:
+            self._bot_rack = new_rack
 
     def get_move(self, players_turn: bool) -> Move:
         """
-        Gets player's move from board or bot's move from bot.
+        Gets player's move from board or bot's move from 
+        move finder.
         """
         if players_turn:
             return Move(self._board.get_placed_tiles())
-        return self._scrabble_bot.get_move()
+        return self._move_finder.get_move(self._bot_rack)
     
     def process_move(self, move: Move) -> MoveResult:
         """Returns processing result from move processor."""
