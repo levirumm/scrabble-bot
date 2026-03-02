@@ -68,6 +68,7 @@ class GameArea(QObject):
         self._swap_button.clicked.connect(
             lambda: self.swapPressed.emit()
         )
+
         self._submit_button.clicked.connect(
             lambda: self.submitPressed.emit()
         )
@@ -84,15 +85,18 @@ class GameArea(QObject):
     
     def update_player_rack(
             self, new_tiles: list[Tile], 
-            used_tiles: list[TilePlacement] | None = None
+            used_tiles: list[Tile] | None = None,
+            racked: bool = False
         ) -> None:
-        self._rack.update(new_tiles, used_tiles)
+        self._rack.update(new_tiles, used_tiles, racked)
+    
+    def update_pending(self) -> None:
+        self._board.update_pending()
     
     def recall(self) -> None:
         self._rack.recall()
 
     def _on_skip(self) -> None:
-        self._board.update_pending()
         self.skipPressed.emit()
     
     def _tile_placed(self, row: int, col: int, tile: Tile) -> None:
@@ -190,7 +194,6 @@ class BoardWidget(QWidget):
         for row in range(BOARD_SIZE):
             row = self._render_row(cell_types, row, layout)
             cells.append(row)
-        
         return cells
     
     def _render_row(
@@ -265,7 +268,7 @@ class TileMetrics(QObject):
             )
         )
         return self._metrics[slot_size]
-    
+
 
 class TileWidget(QFrame):
     """
@@ -433,6 +436,7 @@ class JokerTile(TileWidget):
         """Emits signal to open letter selection menu."""
         super()._on_mouse_press(event)
         if event.button() == Qt.MouseButton.RightButton:
+            pass
             self.letterRequired.emit(self)
         
     def accept_new_slot(self, slot: "TileSlot") -> None:
@@ -475,6 +479,9 @@ class TileSlot(QFrame):
     @property
     def slot_size(self) -> int:
         return self._size
+
+    def set_occupied(self, is_occupied: bool) -> None:
+        self._occupied = is_occupied
 
     def add_tile(self, tile: TileWidget) -> None:
         """Adds tile to layout and updates tile's slot."""
@@ -612,7 +619,8 @@ class LetterRack(QObject):
     
     def update(
             self, new_tiles: list[Tile],  
-            used_tiles: list[TilePlacement] | None = None
+            used_tiles: list[Tile] | None = None,
+            racked: bool = False
         ) -> None:
         """
         Disables and removes reference to used tiles. Creates tile 
@@ -621,7 +629,7 @@ class LetterRack(QObject):
         if used_tiles:
             # Remove used tiles
             for tile in used_tiles:
-                self._remove_tile(tile)
+                self._remove_tile(tile, racked=racked)
 
         for tile in new_tiles:
             # Create new tiles
@@ -629,7 +637,7 @@ class LetterRack(QObject):
                 tile_widget = JokerTile(tile)
                 # Connect to letter required signal
                 tile_widget.letterRequired.connect(
-                    lambda: self.letterRequired.emit(tile)
+                    self._on_letter_required
                 )
             else:
                 tile_widget = TileWidget(tile)  
@@ -645,19 +653,29 @@ class LetterRack(QObject):
                 slot.add_tile(tile)
                 break
 
-    def _remove_tile(self, tile: TilePlacement) -> None:
+    def _remove_tile(self, tile: Tile, racked: bool) -> None:
         """
         Disables, sets to normal styling, and removes reference 
-        to corresponding tile widget on Scrabble board.
+        to corresponding tile widget.
         """
+        slot_type = RackSlot if racked else CellWidget
         tile_widget = (
             next(widget for widget in self._tiles 
-            if widget.tile == tile.tile 
-            and isinstance(widget.slot, CellWidget))
+            if widget.tile == tile
+            and isinstance(widget.slot, slot_type))
         )
+
         self._tiles.remove(tile_widget)
-        tile_widget.disable()
-        tile_widget.set_pending(False)
+
+        if slot_type == CellWidget:
+            tile_widget.disable()
+            tile_widget.set_pending(False)
+        else:
+            tile_widget.slot.set_occupied(False) # type: ignore
+            tile_widget.deleteLater()
+    
+    def _on_letter_required(self, tile: JokerTile) -> None:
+        self.letterRequired.emit(tile)
     
     def _render_recall_button(self, layout: QHBoxLayout) -> None:
         self._recall_button = QPushButton()

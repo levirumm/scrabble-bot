@@ -16,8 +16,8 @@ PALETTE: dict[str, dict[str, str]] = {
         "hover_triple_word": "#942422"
     },
     "tile": {
-        "pending": "#e7d18a",
-        "tile_color": "#f5deb3",
+        "pending": "#e3c37a",
+        "tile_color": "#f2d6a2",
         "tile_border": "#8b6b3e",
         "tile_text": "#12431e"
     },
@@ -36,6 +36,7 @@ PALETTE: dict[str, dict[str, str]] = {
         "warning": "#e8a349"
     },
     "border": {
-        "bd": "#9f9d9d"
+        "bd": "#9f9d9d",
+        "dark": "#7b7b7b"
     }
 }

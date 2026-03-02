@@ -20,3 +20,29 @@ QPushButton[role=letter_button]:hover {{
 QPushButton[role=letter_button]:pressed {{
     background-color: #cdcdcd;
 }}
+
+/* Tile Swap */
+QLabel[role="swap_icon"] {{
+    background-color: {cell[triple_letter]};
+    border: 1px solid {cell[hover_triple_letter]};
+    border-radius: 10px;
+}}
+
+QPushButton[role="button"][variant="swap"]:disabled {{
+    background-color: {border[bd]};
+    border: 1px solid {border[dark]};
+}}
+
+QPushButton[role="button"][variant="swap"] {{
+    background-color: {cell[triple_letter]};
+    border: 1px solid {cell[hover_triple_letter]};
+    color: {background[light]};
+}}
+
+QPushButton[role="button"][variant="swap"]:hover {{
+    background-color: {cell[hover_triple_letter]};
+}}
+
+QPushButton[role="button"][variant="swap"]:pressed {{
+    background-color: #14455c;
+}}

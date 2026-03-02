@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QDialog, QPushButton, QFrame, QGraphicsEffect
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QEvent, QObject
 from PySide6.QtGui import QPixmap
 from app.gui.layout.ui_letter_select_menu import (
     Ui_letter_select
@@ -9,6 +9,9 @@ from app.gui.layout.ui_letter_select_menu import (
 from app.model.types import Tile
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.effects import get_drop_shadow
+from app.gui.game_area import (
+    TileWidget, JokerTile, TileSlot
+)
 from pathlib import Path
 
 
@@ -119,28 +122,122 @@ class LetterButton(QPushButton):
 
 
 class TileSwap(QDialog, Ui_tile_swap):
+    SWAP_PATH = (
+        Path(__file__).parent.parent.parent 
+        / "assets" / "swap.png"
+    )
+
     def __init__(self, parent, tiles: list[Tile]) -> None:
         super().__init__(parent)
         ui = Ui_tile_swap()
         ui.setupUi(self)
 
+        # Use set of slots as slots are hashable
+        self._selected: set[TileSlot] = set()
+        self._slot_map: dict[TileSlot, TileWidget] = {}
+
         ui.selection_count.setProperty("role", "normal")
         ui.selection_count.setProperty("variant", "muted")
-        ui.selection_count.setText("0 Selected")
+        self._counter = ui.selection_count
 
         self._render_window(ui)
+        self._render_tiles(ui, tiles)
+    
+        self._update()
+
+        self._swap_button.clicked.connect(
+            lambda:  self.accept()
+        )
+        self._cancel_button.clicked.connect(
+            lambda: self.reject()
+        )
+    
+    @property
+    def selected(self) -> list[Tile]:
+        selected = []
+        for slot in self._selected:
+            tile_widget = self._slot_map[slot]
+            selected.append(tile_widget.tile)
+        return selected
+    
+    def eventFilter(self, obj: QObject, event: QEvent):
+        if event.type() == QEvent.Type.MouseButtonPress:
+            self._on_press(obj)
+        return super().eventFilter(obj, event)
+    
+    def _update(self) -> None:
+        selected_count = len(self._selected)
+        self._counter.setText(
+            f"{selected_count} Selected"
+        )
+        self._swap_button.setDisabled(selected_count == 0)
+
+    def _on_press(self, slot: QObject) -> None:
+        if not isinstance(slot, TileSlot):
+            return
+        
+        tile = self._slot_map[slot]
+        
+        if slot in self._selected:
+            self._selected.remove(slot)
+            tile.setProperty("state", "normal")
+        else:
+            self._selected.add(slot)
+            tile.setProperty("state", "pending")
+        
+        tile.style().polish(tile)
+
+        self._update()
 
     def _render_window(self, ui: Ui_tile_swap) -> None:
         self._shadow = style_pop_up(self, ui.window_frame)
-        """
-        # Joker icon (top of window)
-        icon = QPixmap(str(self.JOKER_PATH))
-        ui.joker_label.setPixmap(icon)
-        ui.joker_label.setScaledContents(True)
-        ui.joker_label.setProperty(
-            "role", "joker_icon"
-        )"""
+        
+        # Swap icon (top of window)
+        icon = QPixmap(str(self.SWAP_PATH))
+        ui.swap_icon.setPixmap(icon)
+        ui.swap_icon.setScaledContents(True)
+        ui.swap_icon.setProperty(
+            "role", "swap_icon"
+        )
         ui.title.setProperty("role", "sub_heading")
 
-    def _render_tiles(self, ui: Ui_tile_swap, tiles: list[Tile]) -> None:
-        pass
+        # Buttons (swap & skip, cancel)
+        self._swap_button = ui.swap_button
+        self._cancel_button = ui.cancel_button
+        self._cancel_button.setProperty("role", "button")
+        self._swap_button.setProperty("role", "button")
+        self._swap_button.setProperty("variant", "swap")
+
+    def _render_tiles(
+            self, ui: Ui_tile_swap, tiles: list[Tile]
+        ) -> None:
+        """
+        Renders disabled tile widgets which are transparent to 
+        button presses and whose slots react to presses.
+        """
+        layout = ui.tile_layout
+        layout.addStretch()
+
+        for t in tiles:
+            slot = TileSlot(40)
+            tile = (
+                JokerTile(t) if t.is_blank 
+                else TileWidget(t)
+            )
+            slot.add_tile(tile)
+
+            # Tile will not register presses
+            tile.setAttribute(
+                Qt.WidgetAttribute.WA_TransparentForMouseEvents
+            )
+            tile.disable() # Disable just to be safe
+
+            # Event filter to slot for presses on tile
+            slot.installEventFilter(self)
+
+            layout.addWidget(slot)
+
+            # Map slot to tile widget. 
+            # Allows widget change and access to Tile
+            self._slot_map[slot] = tile
+        layout.addStretch()

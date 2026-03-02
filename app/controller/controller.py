@@ -37,12 +37,26 @@ class ScrabbleController:
         self._model.board.remove_tile(row, col)
     
     def _on_submit(self) -> None:
-        """Processes player's move."""
         self._turn(players_turn=True)
     
     def _on_swap(self) -> None:
-        self._view.open_tile_swap(self._model.player_rack)
-    
+        self._view.game_area.recall()
+        selected = self._view.open_tile_swap(
+            self._model.player_rack
+        )
+        if not selected: return
+        
+        new_tiles = self._model.select_tiles(len(selected))
+        self._model.update_rack(
+            players=True, used_tiles=selected, 
+            new_tiles=new_tiles
+        )
+        self._view.game_area.update_player_rack(
+            new_tiles=new_tiles, used_tiles=selected, 
+            racked=True
+        )
+        self._on_skip()
+
     def _on_skip(self) -> None:
         """
         Recalls tiles, skips player's turn, and initiates 
@@ -50,6 +64,7 @@ class ScrabbleController:
         """
         self._view.game_area.recall()
         self._model.skip()
+        self._view.game_area.update_pending()
         self._view.update_turn_history(
             self._model.turn, players=True
         )
@@ -67,7 +82,7 @@ class ScrabbleController:
         self._model.update_rack(players=False, new_tiles=bot_tiles)
 
         # Update letter rack widget
-        self._view.update_player_rack(player_tiles)
+        self._view.game_area.update_player_rack(player_tiles)
 
         # Update info panel to match model
         self._view.update_info_panel(self._model.game_state)
@@ -98,7 +113,7 @@ class ScrabbleController:
         new_tiles = self._model.select_tiles(
             len(result.move.placements)
         )
-        used_tiles = result.move.placements
+        used_tiles = [tp.tile for tp in result.move.placements]
 
         # Update letter rack of move maker
         self._model.update_rack(
@@ -120,7 +135,9 @@ class ScrabbleController:
         )
 
         if players_turn:
-            self._view.update_player_rack(new_tiles, used_tiles)
+            self._view.game_area.update_player_rack(
+                new_tiles, used_tiles
+            )
             # Initiate bot's turn
             self._turn(players_turn=False)
         else:

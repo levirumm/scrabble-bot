@@ -70,7 +70,7 @@ class ScrabbleModel:
 
     def update_rack(
             self, players: bool, new_tiles: list[Tile], 
-            used_tiles: list[TilePlacement] | None = None
+            used_tiles: list[Tile] | None = None
         ) -> None:
         """
         Removes used tiles from move maker's rack and 
@@ -85,15 +85,15 @@ class ScrabbleModel:
             self._bot_rack.extend(new_tiles)
     
     def _remove_used_tiles(
-            self, players: bool, tiles: list[TilePlacement]
+            self, players: bool, tiles: list[Tile]
         ) -> None:
         """Removes used tiles from corresponding letter rack."""
         new_rack = (
             self._player_rack if players else self._bot_rack
         )
         for tile in tiles:
-            if not tile.tile.is_blank:
-                new_rack.remove(tile.tile)
+            if not tile.is_blank:
+                new_rack.remove(tile)
                 continue
             new_rack.remove(
                 next(tile for tile in new_rack if tile.is_blank)

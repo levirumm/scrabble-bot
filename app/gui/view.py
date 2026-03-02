@@ -53,10 +53,15 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         """Exposes game area to controller."""
         return self._game_area
 
-    def open_tile_swap(self, tiles: list[Tile]) -> None:
+    def open_tile_swap(self, tiles: list[Tile]) -> list[Tile] | None:
+        """Opens tile swap menu and returns selected tiles.."""
         tile_swap = TileSwap(self, tiles)
         result = tile_swap.exec()
-    
+
+        if result == QDialog.DialogCode.Accepted:
+            return tile_swap.selected
+        return None
+
     def _open_letter_select(self, tile: QObject) -> None:
         """Opens letter select menu for setting joker tile."""
         letter_select = LetterSelect(self)
@@ -83,13 +88,6 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     def apply_bot_move(self, placements: list[TilePlacement]) -> None:
         """Adds bot's tiles to board."""
         self._game_area.apply_bot_move(placements)
-
-    def update_player_rack(
-            self, new_tiles: list[Tile], 
-            used_tiles: list[TilePlacement] | None = None
-        ) -> None:
-        """Creates new tile widgets in player's letter rack."""
-        self._game_area.update_player_rack(new_tiles, used_tiles)
 
     def _load_qss(self) -> str:
         """
