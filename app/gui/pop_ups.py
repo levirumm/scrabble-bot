@@ -8,6 +8,7 @@ from app.gui.layout.ui_letter_select_menu import (
 )
 from app.model.types import Tile
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
+from app.gui.layout.ui_bot_peek import Ui_bot_peek
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
     TileWidget, JokerTile, TileSlot
@@ -35,7 +36,34 @@ def style_pop_up(window: QDialog, frame: QFrame) -> QGraphicsEffect:
     return shadow
 
 
+class LetterButton(QPushButton):
+    """Simple button allowing user to select a letter."""
+    BUTTON_WIDTH: int = 35
+    BUTTON_HEIGHT: int = 45
+
+    onClicked = Signal(str)
+
+    def __init__(self, letter: str) -> None:
+        super().__init__(letter)
+        self._letter = letter
+
+        self.setFixedSize(
+            self.BUTTON_WIDTH, self.BUTTON_HEIGHT
+        )
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setProperty("role", "letter_button")
+
+        self.clicked.connect(self._on_clicked)
+    
+    def _on_clicked(self) -> None:
+        self.onClicked.emit(self._letter)
+
+
 class LetterSelect(QDialog, Ui_letter_select):
+    """
+    Pop up menu allowing user to select the letter 
+    of a Joker tile.
+    """
     JOKER_PATH = (
         Path(__file__).parent.parent.parent 
         / "assets" / "joker.png"
@@ -45,11 +73,10 @@ class LetterSelect(QDialog, Ui_letter_select):
     
     def __init__(self, parent):
         super().__init__(parent)
-        ui = Ui_letter_select()
-        ui.setupUi(self)
-
         self._selected_letter = None
 
+        ui = Ui_letter_select()
+        ui.setupUi(self)
         self._render_window(ui)
         self._render_keyboard(ui)
     
@@ -76,7 +103,6 @@ class LetterSelect(QDialog, Ui_letter_select):
     def _render_keyboard(self, ui: Ui_letter_select) -> None:
         layout = ui.letter_layout
         letter = "A"
-
         for i in range(self.ROWS * self.COLS):
             row = i // self.COLS
             col = i % self.COLS
@@ -92,36 +118,16 @@ class LetterSelect(QDialog, Ui_letter_select):
     
     def reject(self):
         """
-        Overrides reject method to prevent user escaping without 
-        selecting letter.
+        Overrides reject method to prevent user escaping 
+        without selecting letter.
         """
         pass
 
 
-class LetterButton(QPushButton):
-    """Simple button allowing user to select a letter."""
-    BUTTON_WIDTH: int = 35
-    BUTTON_HEIGHT: int = 45
-
-    onClicked = Signal(str)
-
-    def __init__(self, letter: str) -> None:
-        super().__init__(letter)
-        self._letter = letter
-
-        self.setFixedSize(
-            self.BUTTON_WIDTH, self.BUTTON_HEIGHT
-        )
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setProperty("role", "letter_button")
-
-        self.clicked.connect(self._on_clicked)
-    
-    def _on_clicked(self) -> None:
-        self.onClicked.emit(self._letter)
-
-
 class TileSwap(QDialog, Ui_tile_swap):
+    """
+    Pop up menu allowing user to select tiles to swap.
+    """
     SWAP_PATH = (
         Path(__file__).parent.parent.parent 
         / "assets" / "swap.png"
@@ -154,6 +160,7 @@ class TileSwap(QDialog, Ui_tile_swap):
     
     @property
     def selected(self) -> list[Tile]:
+        """Exposes list of selected tiles."""
         selected = []
         for slot in self._selected:
             tile_widget = self._slot_map[slot]
@@ -161,21 +168,27 @@ class TileSwap(QDialog, Ui_tile_swap):
         return selected
     
     def eventFilter(self, obj: QObject, event: QEvent):
-        if event.type() == QEvent.Type.MouseButtonPress:
+        """Catches presses to tile slots."""
+        if (
+            isinstance(obj, TileSlot) 
+            and event.type() == QEvent.Type.MouseButtonPress
+        ):
             self._on_press(obj)
         return super().eventFilter(obj, event)
     
     def _update(self) -> None:
+        """Updates selection counter and swap button."""
         selected_count = len(self._selected)
         self._counter.setText(
             f"{selected_count} Selected"
         )
         self._swap_button.setDisabled(selected_count == 0)
 
-    def _on_press(self, slot: QObject) -> None:
-        if not isinstance(slot, TileSlot):
-            return
-        
+    def _on_press(self, slot: TileSlot) -> None:
+        """
+        Adds or removes tile slot from selections and 
+        updates styling of tile.
+        """
         tile = self._slot_map[slot]
         
         if slot in self._selected:
@@ -184,9 +197,7 @@ class TileSwap(QDialog, Ui_tile_swap):
         else:
             self._selected.add(slot)
             tile.setProperty("state", "pending")
-        
         tile.style().polish(tile)
-
         self._update()
 
     def _render_window(self, ui: Ui_tile_swap) -> None:
@@ -240,4 +251,62 @@ class TileSwap(QDialog, Ui_tile_swap):
             # Map slot to tile widget. 
             # Allows widget change and access to Tile
             self._slot_map[slot] = tile
+        layout.addStretch()
+
+
+class BotPeek(QDialog, Ui_bot_peek):
+    """
+    Pop up window which lets user see bot's letter rack.
+    """
+    EYE_PATH = (
+        Path(__file__).parent.parent.parent 
+        / "assets" / "spy.png"
+    )
+
+    def __init__(self, parent, tiles: list[Tile]) -> None:
+        super().__init__(parent)
+        ui = Ui_bot_peek()
+        ui.setupUi(self)
+        self._render_window(ui)
+        self._render_tiles(ui, tiles)
+
+        self._close_button.clicked.connect(
+            lambda: self.accept()
+        )
+
+    def _render_window(self, ui: Ui_bot_peek) -> None:
+        self._shadow = style_pop_up(self, ui.frame)
+        
+        # Peek icon (top of window)
+        icon = QPixmap(str(self.EYE_PATH))
+        ui.peek_icon.setPixmap(icon)
+        ui.peek_icon.setScaledContents(True)
+        ui.peek_icon.setProperty(
+            "role", "peek_icon"
+        )
+        ui.title.setProperty("role", "sub_heading")
+
+        self._close_button = ui.close_button
+        ui.close_button.setProperty("role", "button")
+        ui.close_button.setProperty("variant", "submit")
+    
+    def _render_tiles(
+            self, ui: Ui_bot_peek, tiles: list[Tile]
+        ) -> None:
+        layout = ui.tile_layout
+        layout.addStretch()
+        for t in tiles:
+            slot = TileSlot(40)
+            tile = (
+                JokerTile(t) if t.is_blank 
+                else TileWidget(t)
+            )
+            slot.add_tile(tile)
+
+            # Tile will not register presses
+            tile.setAttribute(
+                Qt.WidgetAttribute.WA_TransparentForMouseEvents
+            )
+            tile.disable() # Disable just to be safe
+            layout.addWidget(slot)
         layout.addStretch()

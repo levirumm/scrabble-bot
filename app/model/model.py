@@ -50,6 +50,10 @@ class ScrabbleModel:
     @property
     def player_rack(self) -> list[Tile]:
         return self._player_rack
+
+    @property
+    def bot_rack(self) -> list[Tile]:
+        return self._bot_rack
     
     @property
     def game_state(self) -> GameState:

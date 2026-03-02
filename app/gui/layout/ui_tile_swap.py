@@ -30,14 +30,14 @@ class Ui_tile_swap(object):
         self.verticalLayout.setContentsMargins(10, 10, 10, 10)
         self.window_frame = QFrame(tile_swap)
         self.window_frame.setObjectName(u"window_frame")
-        self.window_frame.setFrameShape(QFrame.StyledPanel)
+        self.window_frame.setFrameShape(QFrame.NoFrame)
         self.window_frame.setFrameShadow(QFrame.Raised)
         self.verticalLayout_2 = QVBoxLayout(self.window_frame)
         self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.swap_icon_container = QFrame(self.window_frame)
         self.swap_icon_container.setObjectName(u"swap_icon_container")
-        self.swap_icon_container.setFrameShape(QFrame.StyledPanel)
+        self.swap_icon_container.setFrameShape(QFrame.NoFrame)
         self.swap_icon_container.setFrameShadow(QFrame.Raised)
         self.horizontalLayout = QHBoxLayout(self.swap_icon_container)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -59,7 +59,7 @@ class Ui_tile_swap(object):
 
         self.label_container = QFrame(self.window_frame)
         self.label_container.setObjectName(u"label_container")
-        self.label_container.setFrameShape(QFrame.StyledPanel)
+        self.label_container.setFrameShape(QFrame.NoFrame)
         self.label_container.setFrameShadow(QFrame.Raised)
         self.verticalLayout_3 = QVBoxLayout(self.label_container)
         self.verticalLayout_3.setSpacing(0)
@@ -81,7 +81,7 @@ class Ui_tile_swap(object):
 
         self.tile_container = QFrame(self.window_frame)
         self.tile_container.setObjectName(u"tile_container")
-        self.tile_container.setFrameShape(QFrame.StyledPanel)
+        self.tile_container.setFrameShape(QFrame.NoFrame)
         self.tile_container.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_3 = QHBoxLayout(self.tile_container)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
@@ -96,7 +96,7 @@ class Ui_tile_swap(object):
 
         self.button_container = QFrame(self.window_frame)
         self.button_container.setObjectName(u"button_container")
-        self.button_container.setFrameShape(QFrame.StyledPanel)
+        self.button_container.setFrameShape(QFrame.NoFrame)
         self.button_container.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_2 = QHBoxLayout(self.button_container)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
@@ -133,7 +133,7 @@ class Ui_tile_swap(object):
         self.swap_icon.setText("")
         self.title.setText(QCoreApplication.translate("tile_swap", u"Select Tiles to Swap", None))
         self.selection_count.setText("")
-        self.swap_button.setText(QCoreApplication.translate("tile_swap", u"Swap and Skip", None))
+        self.swap_button.setText(QCoreApplication.translate("tile_swap", u"Swap && Skip", None))
         self.cancel_button.setText(QCoreApplication.translate("tile_swap", u"Cancel", None))
     # retranslateUi
 

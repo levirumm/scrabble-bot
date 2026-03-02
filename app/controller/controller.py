@@ -29,6 +29,11 @@ class ScrabbleController:
         self._view.game_area.tileRemoved.connect(
             self._on_tile_removed
         )
+
+        # Connect slots to button console
+        self._view.button_console.peekPressed.connect(
+            self._see_bot_rack
+        )
     
     def _on_tile_placed(self, row: int, col: int, tile: Tile) -> None:
         self._model.board.place_tile(row, col, tile)
@@ -38,6 +43,10 @@ class ScrabbleController:
     
     def _on_submit(self) -> None:
         self._turn(players_turn=True)
+    
+    def _see_bot_rack(self) -> None:
+        bot_tiles = self._model.bot_rack
+        self._view.open_bot_peek(bot_tiles)
     
     def _on_swap(self) -> None:
         self._view.game_area.recall()

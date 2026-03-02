@@ -8,8 +8,9 @@ from app.gui.palette.palette import PALETTE
 from app.gui.button_console import ButtonConsole
 from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
-from app.gui.pop_ups import TileSwap
-from app.gui.pop_ups import LetterSelect
+from app.gui.pop_ups import (
+    TileSwap, LetterSelect, BotPeek
+)
 from pathlib import Path
 
 
@@ -50,8 +51,16 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     
     @property
     def game_area(self) -> GameArea:
-        """Exposes game area to controller."""
         return self._game_area
+
+    @property
+    def button_console(self) -> ButtonConsole:
+        return self._button_console
+
+    def open_bot_peek(self, bot_tiles: list[Tile]) -> None:
+        """Opens menu letting user see bot's tiles."""
+        bot_peek = BotPeek(self, bot_tiles)
+        bot_peek.exec()
 
     def open_tile_swap(self, tiles: list[Tile]) -> list[Tile] | None:
         """Opens tile swap menu and returns selected tiles.."""
