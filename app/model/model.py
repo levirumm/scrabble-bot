@@ -10,7 +10,7 @@ from app.model.constants import (
     BOARD_SIZE, LETTER_SCORES, RACK_SLOTS, JOKER_CHAR,
     BINGO_BONUS
 )
-from app.model.trie import Trie
+from app.model.word_structures import Trie, DICTIONARY
 
 
 class ScrabbleModel:
@@ -71,6 +71,9 @@ class ScrabbleModel:
 
     def select_tiles(self, selections: int) -> list[Tile]:
         return self._letter_bag.select(selections)
+
+    def get_definition(self, word: str) -> str | None:
+        return DICTIONARY.get(word, None)
 
     def update_rack(
             self, players: bool, new_tiles: list[Tile], 

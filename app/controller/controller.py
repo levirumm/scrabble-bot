@@ -31,6 +31,9 @@ class ScrabbleController:
         )
 
         # Connect slots to button console
+        self._view.button_console.dictPressed.connect(
+            self._view.open_dictionary
+        )
         self._view.button_console.peekPressed.connect(
             self._see_bot_rack
         )
@@ -47,7 +50,7 @@ class ScrabbleController:
     def _see_bot_rack(self) -> None:
         bot_tiles = self._model.bot_rack
         self._view.open_bot_peek(bot_tiles)
-    
+
     def _on_swap(self) -> None:
         self._view.game_area.recall()
         selected = self._view.open_tile_swap(

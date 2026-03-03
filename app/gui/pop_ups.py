@@ -9,10 +9,12 @@ from app.gui.layout.ui_letter_select_menu import (
 from app.model.types import Tile
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.layout.ui_bot_peek import Ui_bot_peek
+from app.gui.layout.ui_dictionary import Ui_dictionary
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
     TileWidget, JokerTile, TileSlot
 )
+from app.model.word_structures import DICTIONARY
 from pathlib import Path
 
 
@@ -217,7 +219,7 @@ class TileSwap(QDialog, Ui_tile_swap):
         self._cancel_button = ui.cancel_button
         self._cancel_button.setProperty("role", "button")
         self._swap_button.setProperty("role", "button")
-        self._swap_button.setProperty("variant", "swap")
+        self._swap_button.setProperty("variant", "blue")
 
     def _render_tiles(
             self, ui: Ui_tile_swap, tiles: list[Tile]
@@ -288,7 +290,7 @@ class BotPeek(QDialog, Ui_bot_peek):
 
         self._close_button = ui.close_button
         ui.close_button.setProperty("role", "button")
-        ui.close_button.setProperty("variant", "submit")
+        ui.close_button.setProperty("variant", "green")
     
     def _render_tiles(
             self, ui: Ui_bot_peek, tiles: list[Tile]
@@ -310,3 +312,56 @@ class BotPeek(QDialog, Ui_bot_peek):
             tile.disable() # Disable just to be safe
             layout.addWidget(slot)
         layout.addStretch()
+        
+
+class Dictionary(QDialog, Ui_dictionary):
+    DICT_PATH = (
+        Path(__file__).parent.parent.parent 
+        / "assets" / "book-light.png"
+    )
+
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        ui = Ui_dictionary()
+        ui.setupUi(self)
+
+        self._render_window(ui)
+
+        self._search_button.clicked.connect(
+            self._search_word
+        )
+
+        self._close_button.clicked.connect(
+            lambda: self.accept()
+        )
+    
+    def _search_word(self) -> None:
+        word = self._text_input.text().strip().upper()
+        definition = DICTIONARY.get(word, None)
+
+        if definition:
+            self._text_output.setText(definition)
+            self._text_output.setProperty("state", "normal")
+            self._text_output.style().polish(self._text_output)
+        else:
+            self._text_output.setText("Word not found")
+            self._text_output.setProperty("state", "error")
+            self._text_output.style().polish(self._text_output)
+
+    def _render_window(self, ui: Ui_dictionary) -> None:
+        self._shadow = style_pop_up(self, ui.frame)
+        ui.title.setProperty("role", "sub_heading")
+
+        self._text_input = ui.text_input
+        ui.line.setProperty("role", "line")
+
+        self._search_button = ui.search_button
+        self._search_button.setProperty("role", "button")
+        self._search_button.setProperty("variant", "red")
+
+        self._text_output = ui.text_output
+        ui.text_output.setDisabled(True)
+
+        self._close_button = ui.close_button
+        self._close_button.setProperty("role", "button")
+        self._close_button.setProperty("variant", "green")

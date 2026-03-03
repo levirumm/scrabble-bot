@@ -9,7 +9,7 @@ from app.gui.button_console import ButtonConsole
 from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
-    TileSwap, LetterSelect, BotPeek
+    TileSwap, LetterSelect, BotPeek, Dictionary
 )
 from pathlib import Path
 
@@ -56,6 +56,11 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     @property
     def button_console(self) -> ButtonConsole:
         return self._button_console
+
+    def open_dictionary(self) -> None:
+        """Opens dictionary menu letting user search words."""
+        dictionary = Dictionary(self)
+        dictionary.exec()
 
     def open_bot_peek(self, bot_tiles: list[Tile]) -> None:
         """Opens menu letting user see bot's tiles."""

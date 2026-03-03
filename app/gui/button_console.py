@@ -28,6 +28,7 @@ class ButtonConsole(QObject):
     ICON_LARGE: int = 34
     ICON_SMALL: int = 30
 
+    dictPressed = Signal()
     peekPressed = Signal()
     
     def __init__(self, ui: Ui_ScrabbleView) -> None:
@@ -56,6 +57,9 @@ class ButtonConsole(QObject):
             ui.hint_icon, "hint", small=True
         )
 
+        dict_icon.clicked.connect(
+            lambda: self.dictPressed.emit()
+        )
         peek_icon.clicked.connect(
             lambda: self.peekPressed.emit()
         )

@@ -30,22 +30,22 @@ QLabel[role="swap_icon"] {{
     border-radius: 10px;
 }}
 
-QPushButton[role="button"][variant="swap"]:disabled {{
+QPushButton[role="button"][variant="blue"]:disabled {{
     background-color: {border[bd]};
     border: 1px solid {border[dark]};
 }}
 
-QPushButton[role="button"][variant="swap"] {{
+QPushButton[role="button"][variant="blue"] {{
     background-color: {cell[triple_letter]};
     border: 1px solid {cell[hover_triple_letter]};
     color: {background[light]};
 }}
 
-QPushButton[role="button"][variant="swap"]:hover {{
+QPushButton[role="button"][variant="blue"]:hover {{
     background-color: {cell[hover_triple_letter]};
 }}
 
-QPushButton[role="button"][variant="swap"]:pressed {{
+QPushButton[role="button"][variant="blue"]:pressed {{
     background-color: #14455c;
 }}
 
@@ -56,4 +56,45 @@ QLabel[role="peek_icon"] {{
     background-color: {cell[blank_cell]};
     border: 1px solid {cell[hover_blank_cell]};
     border-radius: 10px;
+}}
+
+/* Dictionary */
+
+QLineEdit {{
+    color: {text[text]};
+    border: 1px solid {border[bd]};
+    border-radius: 6px;
+    font-family: Sans Serif;
+    font-size: 12pt;
+}}
+
+QTextEdit {{
+    color: {text[muted]};
+    border: 1px solid {border[bd]};
+    border-radius: 10px;
+    font-family: Sans Serif;
+    font-size: 12pt;
+    padding: 4px 4px 4px 4px;
+}}
+
+QTextEdit[state="error"] {{
+    color: {cell[triple_word]};
+}}
+
+QTextEdit[state="normal"] {{
+    color: {text[muted]};
+}}
+
+QPushButton[role="button"][variant="red"] {{
+    background-color: {cell[triple_word]};
+    border: 1px solid {cell[hover_triple_word]};
+    color: {background[light]};
+}}
+
+QPushButton[role="button"][variant="red"]:hover {{
+    background-color: {cell[hover_triple_word]};
+}}
+
+QPushButton[role="button"][variant="red"]:pressed {{
+    background-color: #841b19;
 }}

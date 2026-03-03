@@ -6,7 +6,7 @@ from app.model.game_objects import ScrabbleBoard
 from app.model.constants import (
     BOARD_SIZE, RACK_SLOTS, JOKER_CHAR
 )
-from app.model.trie import Trie
+from app.model.word_structures import Trie
 
 
 class MoveFinder:

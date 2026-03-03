@@ -118,7 +118,7 @@ class GameArea(QObject):
         self._skip_button.setProperty("role", "button")
         self._swap_button.setProperty("role", "button")
         self._submit_button.setProperty("role", "button")
-        self._submit_button.setProperty("variant", "submit")
+        self._submit_button.setProperty("variant", "green")
 
 
 class BoardWidget(QWidget):

@@ -14,9 +14,9 @@ PALETTE: dict[str, dict[str, str]] = {
         "hover_double_word": "#bf8f58",
         "triple_word": "#ba3836",
         "hover_triple_word": "#942422"
-    },
+    }, 
     "tile": {
-        "pending": "#e3c37a",
+        "pending": "#f1d084",
         "tile_color": "#f2d6a2",
         "tile_border": "#8b6b3e",
         "tile_text": "#12431e"

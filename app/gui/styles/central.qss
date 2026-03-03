@@ -11,6 +11,39 @@ QFrame[role="top_card"] {{
     border-radius: 15px;
 }}
 
+/* Buttons */
+
+QPushButton[role="button"] {{
+    background-color: {background[bg]};
+    border-radius: 5px;
+    border: 1px solid {border[bd]};
+    color: {text[text]};
+    font-family: Sans Serif;
+    font-size: 12pt;
+}}
+
+QPushButton[role="button"]:hover {{
+    background-color: #c3c4c4;
+}}
+
+QPushButton[role="button"]:pressed {{
+    background-color: #b0b1b1;
+}}
+
+QPushButton[role="button"][variant="green"] {{
+    background-color: {cell[blank_cell]};
+    border: 1px solid {cell[hover_blank_cell]};
+    color: {background[light]};
+}}
+
+QPushButton[role="button"][variant="green"]:hover {{
+    background-color: {cell[hover_blank_cell]};
+}}
+
+QPushButton[role="button"][variant="green"]:pressed {{
+    background-color: #05341c;
+}}
+
 
 /* Labels */
 
