@@ -10,6 +10,7 @@ from app.model.types import Tile
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.layout.ui_bot_peek import Ui_bot_peek
 from app.gui.layout.ui_dictionary import Ui_dictionary
+from app.gui.layout.ui_hint_menu import Ui_hint_menu
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
     TileWidget, JokerTile, TileSlot
@@ -312,7 +313,7 @@ class BotPeek(QDialog, Ui_bot_peek):
             tile.disable() # Disable just to be safe
             layout.addWidget(slot)
         layout.addStretch()
-        
+
 
 class Dictionary(QDialog, Ui_dictionary):
     DICT_PATH = (
@@ -365,3 +366,24 @@ class Dictionary(QDialog, Ui_dictionary):
         self._close_button = ui.close_button
         self._close_button.setProperty("role", "button")
         self._close_button.setProperty("variant", "green")
+
+
+class HintMenu(QDialog, Ui_hint_menu):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        ui = Ui_hint_menu()
+        ui.setupUi(self)
+
+        self._shadow = style_pop_up(self, ui.frame)
+
+        ui.title.setProperty("role", "sub_heading")
+        ui.cancel_button.setProperty("role", "button")
+        ui.play_button.setProperty("role", "button")
+        ui.play_button.setProperty("variant", "blue")
+
+        ui.play_button.clicked.connect(
+            lambda:  self.accept()
+        )
+        ui.cancel_button.clicked.connect(
+            lambda: self.reject()
+        )

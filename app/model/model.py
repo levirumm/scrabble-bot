@@ -66,6 +66,10 @@ class ScrabbleModel:
             turn=self._turn
         )
 
+    @property
+    def remaining_tiles(self) -> int:
+        return self._letter_bag.remaining_tiles
+
     def skip(self) -> None:
         self._turn += 1
 
@@ -110,21 +114,23 @@ class ScrabbleModel:
         else:
             self._bot_rack = new_rack
 
-    def get_move(self, players_turn: bool) -> Move:
-        """
-        Gets player's move from board or bot's move from 
-        move finder.
-        """
-        if players_turn:
-            return Move(self._board.get_placed_tiles())
-        return self._move_finder.get_move(self._bot_rack)
+    def get_player_move(self) -> Move:
+        """Gets player's move from board."""
+        return Move(self._board.get_placed_tiles())
+
+    def get_move(self, players: bool) -> Move:
+        """Gets highest scoring move from move finder."""
+        rack = (
+            self._player_rack if players else self._bot_rack
+        )
+        return self._move_finder.get_move(rack)
     
     def process_move(self, move: Move) -> MoveResult:
         """Returns processing result from move processor."""
         return self._move_processor.process(move)
 
     def apply_move(
-            self, move_result: MoveResult, players_turn: bool
+            self, move_result: MoveResult, players: bool
         ) -> None:
         """
         Applies move to board object, restrict board, and 
@@ -133,7 +139,7 @@ class ScrabbleModel:
         move = move_result.move
         formed_words = move_result.formed_words
 
-        # Player's move will not yet have score
+        # Players move will not have score (unless from hint)
         if not move.score:
             move.score = self._move_processor.get_score(
             formed_words.main_word # type: ignore
@@ -145,7 +151,7 @@ class ScrabbleModel:
 
         # Update game state
         self._turn += 1
-        if players_turn:
+        if players:
             self._player_points += move.score
         else:
             self._bot_points += move.score

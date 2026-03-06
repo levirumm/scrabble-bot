@@ -9,7 +9,8 @@ from app.gui.button_console import ButtonConsole
 from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
-    TileSwap, LetterSelect, BotPeek, Dictionary
+    TileSwap, LetterSelect, BotPeek, Dictionary,
+    HintMenu
 )
 from pathlib import Path
 
@@ -62,6 +63,16 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         dictionary = Dictionary(self)
         dictionary.exec()
 
+    def open_hint_menu(self) -> bool:
+        """Opens dialog to choose to play suggested move."""
+        hint_menu = HintMenu(self)
+        pos = self._button_console.hint_button_coords()
+        hint_menu.move(pos.x(), pos.y())
+
+        result = hint_menu.exec()
+
+        return result == QDialog.DialogCode.Accepted
+
     def open_bot_peek(self, bot_tiles: list[Tile]) -> None:
         """Opens menu letting user see bot's tiles."""
         bot_peek = BotPeek(self, bot_tiles)
@@ -98,10 +109,6 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         self._info_panel.update_turn_history(
            turn, players, score, formed_words 
         )
-    
-    def apply_bot_move(self, placements: list[TilePlacement]) -> None:
-        """Adds bot's tiles to board."""
-        self._game_area.apply_bot_move(placements)
 
     def _load_qss(self) -> str:
         """

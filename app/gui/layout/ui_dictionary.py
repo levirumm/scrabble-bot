@@ -160,8 +160,8 @@ class Ui_dictionary(object):
         sizePolicy6.setVerticalStretch(0)
         sizePolicy6.setHeightForWidth(self.close_button.sizePolicy().hasHeightForWidth())
         self.close_button.setSizePolicy(sizePolicy6)
-        self.close_button.setMinimumSize(QSize(120, 30))
-        self.close_button.setMaximumSize(QSize(120, 30))
+        self.close_button.setMinimumSize(QSize(110, 30))
+        self.close_button.setMaximumSize(QSize(110, 30))
 
         self.horizontalLayout.addWidget(self.close_button)
 

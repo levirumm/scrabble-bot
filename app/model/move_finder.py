@@ -49,18 +49,19 @@ class MoveFinder:
 
     def _get_possible_words(self, rack: list[Tile]) -> list[FormedWord]:
         """Returns all possible words Scrabble bot can make."""
-        if self._board.is_blank:
-            # Lazy approach: Start word from center cell
-            # Does not return necessarily highest scoring move
-            center: int = BOARD_SIZE // 2
-            line = self._board.board[center]
-            return (
-                self._get_index_words(
-                    rack, line, center, row=True
-                )
-            )
-
         placements: list[FormedWord] = []
+
+        if self._board.is_blank:
+            # Center row an column are same
+            # Default to using row
+            line = self._board.board[BOARD_SIZE // 2]
+            for idx in range(1, BOARD_SIZE // 2 + 1):
+                placements.extend(
+                    self._get_index_words(
+                        rack, line, idx, row=True, blank=True
+                    )
+                )
+            return placements
 
         # Check all rows for possible placements
         for row in self._board.board:
@@ -151,7 +152,7 @@ class MoveFinder:
 
     def _get_index_words(
             self, rack: list[Tile], line: list[Cell], 
-            idx: int, row: bool
+            idx: int, row: bool, blank: bool = False
         ) -> list[FormedWord]:
         """
         Returns all words that can be made starting on given 
@@ -159,7 +160,7 @@ class MoveFinder:
         """
         search = RecursiveSearch(
             root=self._trie.root, rack=rack, line=line, 
-            idx=idx, is_row=row, is_blank=self._board.is_blank, 
+            idx=idx, is_row=row, is_blank=blank, 
             trie=self._trie
         )
         return search.get_all()
@@ -179,10 +180,11 @@ class RecursiveSearch:
         self._is_row: bool = is_row
         self._possible_words: list[FormedWord] = []
         self._trie = trie
+        self._is_blank = is_blank
+        self._center = BOARD_SIZE // 2
 
         self.search(
-            node=root, path=[], rack=rack, idx=idx, 
-            connected=is_blank
+            node=root, path=[], rack=rack, idx=idx
         )
 
     def get_all(self) -> list[FormedWord]:
@@ -239,9 +241,13 @@ class RecursiveSearch:
             # Do not search
             return
         
-        # If there is a restriction, uses anchor and is connected
-        now_connected = connected or bool(restriction)
-        
+        if self._is_blank:
+            # Word is 'connected' if it uses center cell
+            now_connected = idx == self._center
+        else:
+            # If there is a restriction, uses anchor and is connected
+            now_connected = connected or bool(restriction)
+            
         # Get set of possible letters that can be placed in position
         letter_options: set[str] = set()
         for tile in rack:

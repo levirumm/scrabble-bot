@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QPushButton
 from PySide6.QtGui import QIcon
-from PySide6.QtCore import QSize, Signal, QObject
+from PySide6.QtCore import QSize, Signal, QObject, QPoint
 from app.gui.layout.ui_scrabble_view import Ui_ScrabbleView
 from app.gui.effects import get_drop_shadow
 from pathlib import Path
@@ -30,6 +30,7 @@ class ButtonConsole(QObject):
 
     dictPressed = Signal()
     peekPressed = Signal()
+    hintPressed = Signal()
     
     def __init__(self, ui: Ui_ScrabbleView) -> None:
         super().__init__()
@@ -53,7 +54,7 @@ class ButtonConsole(QObject):
             ui.peek_icon, "peek"
         )
         # Hint icon (lightbulb)
-        hint_icon = self._create_icon(
+        self._hint_icon = self._create_icon(
             ui.hint_icon, "hint", small=True
         )
 
@@ -63,6 +64,12 @@ class ButtonConsole(QObject):
         peek_icon.clicked.connect(
             lambda: self.peekPressed.emit()
         )
+        self._hint_icon.clicked.connect(
+            lambda: self.hintPressed.emit()
+        )
+    
+    def hint_button_coords(self) -> QPoint:
+        return self._hint_icon.mapToGlobal(QPoint(0, 0))
 
     def _create_icon(
             self, button: QPushButton, key: str, 

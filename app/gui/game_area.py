@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QFrame, QHBoxLayout, QGridLayout,
-    QPushButton
+    QPushButton, QGraphicsOpacityEffect
 )
 from PySide6.QtCore import (
     Qt, QSize, QMimeData, Signal, QEvent, QObject,
@@ -68,7 +68,6 @@ class GameArea(QObject):
         self._swap_button.clicked.connect(
             lambda: self.swapPressed.emit()
         )
-
         self._submit_button.clicked.connect(
             lambda: self.submitPressed.emit()
         )
@@ -80,15 +79,26 @@ class GameArea(QObject):
         self._board.tilePlaced.connect(self._tile_placed)
         self._board.tileRemoved.connect(self._tile_removed)
     
-    def apply_bot_move(self, placements: list[TilePlacement]) -> None:
-        self._board.render_bot_tiles(placements)
+    def apply_move(
+            self, placements: list[TilePlacement], 
+            pending: bool = True
+        ) -> None:
+        self._board.apply_move(placements, pending)
+    
+    def show_hint_preview(self, placements: list[TilePlacement]) -> None:
+        self._board.show_hint_preview(placements)
+    
+    def remove_hint_preview(self) -> None:
+        self._board.remove_hint_preview()
     
     def update_player_rack(
             self, new_tiles: list[Tile], 
             used_tiles: list[Tile] | None = None,
-            racked: bool = False
+            racked: bool = False, hint: bool = False
         ) -> None:
-        self._rack.update(new_tiles, used_tiles, racked)
+        self._rack.update(
+            new_tiles, used_tiles, racked, hint
+        )
     
     def update_pending(self) -> None:
         self._board.update_pending()
@@ -138,6 +148,7 @@ class BoardWidget(QWidget):
             self._render_board(cell_types, border, layout)
         )
         self._pending_tiles: list[TileWidget] = []
+        self._hint_tiles: dict = {}
 
     @property
     def cells(self) -> list[list["CellWidget"]]:
@@ -147,14 +158,49 @@ class BoardWidget(QWidget):
         """Sets tiles in pending to normal style."""
         for tile_widget in self._pending_tiles:
             tile_widget.set_pending(False)
+    
+    def remove_hint_preview(self) -> None:
+        """Deletes tile widgets composing hint."""
+        for tile_widget in self._hint_tiles.keys():
+            tile_widget.deleteLater()
+            tile_widget.slot.clear()
+        self._hint_tiles: dict = {}
+    
+    def apply_move(
+            self, tiles: list[TilePlacement], 
+            pending: bool = True
+        ) -> None:
+        """
+        Renders tiles widgets from move. Uses pending 
+        styling unless otherwise stated.
+        """
+        tile_widgets = self._render_tiles(tiles)
+        self._pending_tiles: list[TileWidget] = []
+        self._pending_tiles.extend(tile_widgets)
 
-    def render_bot_tiles(self, used_tiles: list[TilePlacement]) -> None: 
-        """Renders bot's move's tile widgets in pending styling."""
-        self._pending_tiles = []
+        for tile in self._pending_tiles:
+            tile.set_pending(True)
+    
+    def show_hint_preview(self, tiles: list[TilePlacement]) -> None:
+        self._hint_tiles: dict = {}
 
-        for tp in used_tiles:
+        tile_widgets = self._render_tiles(tiles)
+
+        for tile in tile_widgets:
+            effect = QGraphicsOpacityEffect()
+            effect.setOpacity(0.7)
+            tile.setGraphicsEffect(effect)
+            self._hint_tiles[tile] = effect
+
+    def _render_tiles(
+            self, tiles: list[TilePlacement]
+        ) -> list["TileWidget"]: 
+        """Renders and returns references to tile widgets."""
+        tile_widgets: list[TileWidget] = []
+
+        for tp in tiles:
             tile = tp.tile
-            
+
             if tile.is_blank:
                 tile_widget = JokerTile(tile)
             else:
@@ -162,12 +208,10 @@ class BoardWidget(QWidget):
 
             cell = self._cells[tp.row][tp.col]
             cell.add_tile(tile_widget)
-
             tile_widget.disable()
-            tile_widget.set_pending(True)
+            tile_widgets.append(tile_widget)
+        return tile_widgets
 
-            self._pending_tiles.append(tile_widget)
-        
     def _tile_placed(self, row: int, col: int, tile: Tile) -> None:
         """
         Emits signal. If bot's move in pending, sets tile widgets
@@ -620,7 +664,7 @@ class LetterRack(QObject):
     def update(
             self, new_tiles: list[Tile],  
             used_tiles: list[Tile] | None = None,
-            racked: bool = False
+            racked: bool = False, hint: bool = False
         ) -> None:
         """
         Disables and removes reference to used tiles. Creates tile 
@@ -629,7 +673,7 @@ class LetterRack(QObject):
         if used_tiles:
             # Remove used tiles
             for tile in used_tiles:
-                self._remove_tile(tile, racked=racked)
+                self._remove_tile(tile, racked, hint)
 
         for tile in new_tiles:
             # Create new tiles
@@ -653,17 +697,24 @@ class LetterRack(QObject):
                 slot.add_tile(tile)
                 break
 
-    def _remove_tile(self, tile: Tile, racked: bool) -> None:
+    def _remove_tile(self, tile: Tile, racked: bool, hint: bool) -> None:
         """
         Disables, sets to normal styling, and removes reference 
         to corresponding tile widget.
         """
-        slot_type = RackSlot if racked else CellWidget
-        tile_widget = (
-            next(widget for widget in self._tiles 
-            if widget.tile == tile
-            and isinstance(widget.slot, slot_type))
-        )
+        slot_type = RackSlot if (racked or hint) else CellWidget
+
+        if hint and tile.is_blank:
+            tile_widget = next(
+                widget for widget in self._tiles 
+                if widget.tile.is_blank
+            )
+        else:
+            tile_widget = (
+                next(widget for widget in self._tiles 
+                if widget.tile == tile
+                and isinstance(widget.slot, slot_type))
+            )
 
         self._tiles.remove(tile_widget)
 
