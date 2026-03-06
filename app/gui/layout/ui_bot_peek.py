@@ -41,30 +41,6 @@ class Ui_bot_peek(object):
         self.verticalLayout_2.setSpacing(4)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(15, 15, 15, 15)
-        self.peek_icon_container = QFrame(self.frame)
-        self.peek_icon_container.setObjectName(u"peek_icon_container")
-        self.peek_icon_container.setFrameShape(QFrame.NoFrame)
-        self.peek_icon_container.setFrameShadow(QFrame.Raised)
-        self.horizontalLayout = QHBoxLayout(self.peek_icon_container)
-        self.horizontalLayout.setSpacing(0)
-        self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.peek_icon = QLabel(self.peek_icon_container)
-        self.peek_icon.setObjectName(u"peek_icon")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.peek_icon.sizePolicy().hasHeightForWidth())
-        self.peek_icon.setSizePolicy(sizePolicy1)
-        self.peek_icon.setMinimumSize(QSize(40, 40))
-        self.peek_icon.setMaximumSize(QSize(40, 40))
-        self.peek_icon.setAlignment(Qt.AlignCenter)
-
-        self.horizontalLayout.addWidget(self.peek_icon)
-
-
-        self.verticalLayout_2.addWidget(self.peek_icon_container)
-
         self.frame_3 = QFrame(self.frame)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setFrameShape(QFrame.NoFrame)
@@ -108,6 +84,9 @@ class Ui_bot_peek(object):
         self.horizontalLayout_2.setContentsMargins(0, 20, 0, 5)
         self.close_button = QPushButton(self.frame_2)
         self.close_button.setObjectName(u"close_button")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.close_button.sizePolicy().hasHeightForWidth())
         self.close_button.setSizePolicy(sizePolicy1)
         self.close_button.setMinimumSize(QSize(200, 33))
@@ -129,7 +108,6 @@ class Ui_bot_peek(object):
 
     def retranslateUi(self, bot_peek):
         bot_peek.setWindowTitle(QCoreApplication.translate("bot_peek", u"Dialog", None))
-        self.peek_icon.setText("")
         self.title.setText(QCoreApplication.translate("bot_peek", u"Scrabble Bot's Letter Rack", None))
         self.close_button.setText(QCoreApplication.translate("bot_peek", u"Close", None))
     # retranslateUi

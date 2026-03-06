@@ -28,6 +28,7 @@ class ButtonConsole(QObject):
     ICON_LARGE: int = 34
     ICON_SMALL: int = 30
 
+    infoPressed = Signal()
     dictPressed = Signal()
     peekPressed = Signal()
     hintPressed = Signal()
@@ -58,6 +59,9 @@ class ButtonConsole(QObject):
             ui.hint_icon, "hint", small=True
         )
 
+        info_icon.clicked.connect(
+            lambda: self.infoPressed.emit()
+        )
         dict_icon.clicked.connect(
             lambda: self.dictPressed.emit()
         )

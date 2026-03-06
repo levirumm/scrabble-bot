@@ -98,3 +98,28 @@ QPushButton[role="button"][variant="red"]:hover {{
 QPushButton[role="button"][variant="red"]:pressed {{
     background-color: #841b19;
 }}
+
+/* Game Info */
+QLabel[role="triple_word"] {{
+    background-color: {cell[triple_word]};
+    border: 1px solid {cell[hover_triple_word]};
+    border-radius: 3px;
+}}
+
+QLabel[role="double_word"] {{
+    background-color: {cell[double_word]};
+    border: 1px solid {cell[hover_double_word]};
+    border-radius: 3px;
+}}
+
+QLabel[role="triple_letter"] {{
+    background-color: {cell[triple_letter]};
+    border: 1px solid {cell[hover_triple_letter]};
+    border-radius: 3px;
+}}
+
+QLabel[role="double_letter"] {{
+    background-color: {cell[double_letter]};
+    border: 1px solid {cell[hover_double_letter]};
+    border-radius: 3px;
+}}

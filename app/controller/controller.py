@@ -33,6 +33,9 @@ class ScrabbleController:
         )
 
         # Connect slots to button console
+        self._view.button_console.infoPressed.connect(
+            self._view.open_game_info
+        )
         self._view.button_console.dictPressed.connect(
             self._view.open_dictionary
         )
@@ -101,7 +104,7 @@ class ScrabbleController:
         Allows user to select tiles to swap. Gets new tiles 
         from letter bag and skips players turn.
         """
-        if self._model.remaining_tiles > RACK_SLOTS:
+        if self._model.remaining_tiles < RACK_SLOTS:
             # Cannot skip if less than 7 tiles
             print(
                 "Cannot swap with less than " \

@@ -35,18 +35,18 @@ class Ui_letter_select(object):
         self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.verticalLayout_2.setContentsMargins(10, 10, 10, 10)
-        self.window_frame = QFrame(letter_select)
-        self.window_frame.setObjectName(u"window_frame")
+        self.frame = QFrame(letter_select)
+        self.frame.setObjectName(u"frame")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.window_frame.sizePolicy().hasHeightForWidth())
-        self.window_frame.setSizePolicy(sizePolicy1)
-        self.window_frame.setFrameShape(QFrame.NoFrame)
-        self.window_frame.setFrameShadow(QFrame.Raised)
-        self.verticalLayout = QVBoxLayout(self.window_frame)
+        sizePolicy1.setHeightForWidth(self.frame.sizePolicy().hasHeightForWidth())
+        self.frame.setSizePolicy(sizePolicy1)
+        self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.joker_label_container = QFrame(self.window_frame)
+        self.joker_label_container = QFrame(self.frame)
         self.joker_label_container.setObjectName(u"joker_label_container")
         self.joker_label_container.setFrameShape(QFrame.NoFrame)
         self.joker_label_container.setFrameShadow(QFrame.Raised)
@@ -68,13 +68,13 @@ class Ui_letter_select(object):
 
         self.verticalLayout.addWidget(self.joker_label_container)
 
-        self.title = QLabel(self.window_frame)
+        self.title = QLabel(self.frame)
         self.title.setObjectName(u"title")
         self.title.setAlignment(Qt.AlignCenter)
 
         self.verticalLayout.addWidget(self.title)
 
-        self.letter_container = QFrame(self.window_frame)
+        self.letter_container = QFrame(self.frame)
         self.letter_container.setObjectName(u"letter_container")
         self.letter_container.setFrameShape(QFrame.NoFrame)
         self.letter_container.setFrameShadow(QFrame.Raised)
@@ -91,7 +91,7 @@ class Ui_letter_select(object):
         self.verticalLayout.addWidget(self.letter_container)
 
 
-        self.verticalLayout_2.addWidget(self.window_frame)
+        self.verticalLayout_2.addWidget(self.frame)
 
 
         self.retranslateUi(letter_select)

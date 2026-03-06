@@ -28,14 +28,14 @@ class Ui_tile_swap(object):
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(10, 10, 10, 10)
-        self.window_frame = QFrame(tile_swap)
-        self.window_frame.setObjectName(u"window_frame")
-        self.window_frame.setFrameShape(QFrame.NoFrame)
-        self.window_frame.setFrameShadow(QFrame.Raised)
-        self.verticalLayout_2 = QVBoxLayout(self.window_frame)
+        self.frame = QFrame(tile_swap)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.NoFrame)
+        self.frame.setFrameShadow(QFrame.Raised)
+        self.verticalLayout_2 = QVBoxLayout(self.frame)
         self.verticalLayout_2.setSpacing(0)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.swap_icon_container = QFrame(self.window_frame)
+        self.swap_icon_container = QFrame(self.frame)
         self.swap_icon_container.setObjectName(u"swap_icon_container")
         self.swap_icon_container.setFrameShape(QFrame.NoFrame)
         self.swap_icon_container.setFrameShadow(QFrame.Raised)
@@ -57,7 +57,7 @@ class Ui_tile_swap(object):
 
         self.verticalLayout_2.addWidget(self.swap_icon_container)
 
-        self.label_container = QFrame(self.window_frame)
+        self.label_container = QFrame(self.frame)
         self.label_container.setObjectName(u"label_container")
         self.label_container.setFrameShape(QFrame.NoFrame)
         self.label_container.setFrameShadow(QFrame.Raised)
@@ -79,7 +79,7 @@ class Ui_tile_swap(object):
 
         self.verticalLayout_2.addWidget(self.label_container)
 
-        self.tile_container = QFrame(self.window_frame)
+        self.tile_container = QFrame(self.frame)
         self.tile_container.setObjectName(u"tile_container")
         self.tile_container.setFrameShape(QFrame.NoFrame)
         self.tile_container.setFrameShadow(QFrame.Raised)
@@ -94,7 +94,7 @@ class Ui_tile_swap(object):
 
         self.verticalLayout_2.addWidget(self.tile_container)
 
-        self.button_container = QFrame(self.window_frame)
+        self.button_container = QFrame(self.frame)
         self.button_container.setObjectName(u"button_container")
         self.button_container.setFrameShape(QFrame.NoFrame)
         self.button_container.setFrameShadow(QFrame.Raised)
@@ -120,7 +120,7 @@ class Ui_tile_swap(object):
         self.verticalLayout_2.addWidget(self.button_container)
 
 
-        self.verticalLayout.addWidget(self.window_frame)
+        self.verticalLayout.addWidget(self.frame)
 
 
         self.retranslateUi(tile_swap)

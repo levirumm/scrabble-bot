@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QDialog, QPushButton, QFrame, QGraphicsEffect
+    QDialog, QPushButton, QLabel, QGraphicsEffect
 )
 from PySide6.QtCore import Qt, Signal, QEvent, QObject
 from PySide6.QtGui import QPixmap
@@ -11,6 +11,7 @@ from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.layout.ui_bot_peek import Ui_bot_peek
 from app.gui.layout.ui_dictionary import Ui_dictionary
 from app.gui.layout.ui_hint_menu import Ui_hint_menu
+from app.gui.layout.ui_game_info import Ui_game_info
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
     TileWidget, JokerTile, TileSlot
@@ -19,24 +20,45 @@ from app.model.word_structures import DICTIONARY
 from pathlib import Path
 
 
-def style_pop_up(window: QDialog, frame: QFrame) -> QGraphicsEffect:
+def style_pop_up(
+        window: QDialog, ui, modal: bool
+    ) -> QGraphicsEffect:
     """
-    Applies styling common to pop ups. Returns reference to 
-    shadow effect to allow reference storage.
+    Applies styling common to pop ups. Returns reference 
+    to shadow effect to allow reference storage.
     """
-    window.setWindowFlags(
-            Qt.WindowType.FramelessWindowHint | 
-            Qt.WindowType.Dialog
-        )
+    flags = Qt.WindowType.FramelessWindowHint
+    flags |= (
+        Qt.WindowType.Dialog if modal else 
+        Qt.WindowType.Popup | 
+        Qt.WindowType.NoDropShadowWindowHint
+    )
+    window.setWindowFlags(flags)
     window.setAttribute(
         Qt.WidgetAttribute.WA_TranslucentBackground
     )
-    # Apply card properties and drop shadow
-    frame.setProperty("role", "top_card")
+
+    # Apply common styling properties and drop shadow
+    ui.frame.setProperty("role", "top_card")
+    ui.title.setProperty("role", "sub_heading")
     shadow = get_drop_shadow()
-    frame.setGraphicsEffect(shadow)
+    ui.frame.setGraphicsEffect(shadow)
 
     return shadow
+
+
+def render_icon(
+        label: QLabel, icon_path: Path, 
+        role_str: str
+    ) -> None:
+    """
+    Adds icon of given path to label and applies styling
+    properties.
+    """
+    icon = QPixmap(str(icon_path))
+    label.setPixmap(icon)
+    label.setScaledContents(True)
+    label.setProperty("role", role_str)
 
 
 class LetterButton(QPushButton):
@@ -49,7 +71,6 @@ class LetterButton(QPushButton):
     def __init__(self, letter: str) -> None:
         super().__init__(letter)
         self._letter = letter
-
         self.setFixedSize(
             self.BUTTON_WIDTH, self.BUTTON_HEIGHT
         )
@@ -64,7 +85,7 @@ class LetterButton(QPushButton):
 
 class LetterSelect(QDialog, Ui_letter_select):
     """
-    Pop up menu allowing user to select the letter 
+    Modal dialog menu allowing user to select the letter 
     of a Joker tile.
     """
     JOKER_PATH = (
@@ -76,34 +97,29 @@ class LetterSelect(QDialog, Ui_letter_select):
     
     def __init__(self, parent):
         super().__init__(parent)
-        self._selected_letter = None
-
         ui = Ui_letter_select()
         ui.setupUi(self)
-        self._render_window(ui)
-        self._render_keyboard(ui)
+        self._selected_letter = None
+
+        # Render graphics elements
+        self._shdw = style_pop_up(self, ui, modal=True)
+        render_icon(
+            ui.joker_label, self.JOKER_PATH,
+            role_str="joker_icon"
+        )
+        self._render_keyboard(ui) 
     
     @property
     def selected_letter(self) -> str | None:
         return self._selected_letter
 
     def _on_select(self, letter: str) -> None:
+        """Sets selected letter and closes dialog."""
         self._selected_letter = letter
-        self.accept() # Closes dialog
+        self.accept()
 
-    def _render_window(self, ui: Ui_letter_select) -> None:
-        self._shadow = style_pop_up(self, ui.window_frame)
-
-        # Joker icon (top of window)
-        icon = QPixmap(str(self.JOKER_PATH))
-        ui.joker_label.setPixmap(icon)
-        ui.joker_label.setScaledContents(True)
-        ui.joker_label.setProperty(
-            "role", "joker_icon"
-        )
-        ui.title.setProperty("role", "sub_heading")
-    
     def _render_keyboard(self, ui: Ui_letter_select) -> None:
+        """Renders grid of letter buttons."""
         layout = ui.letter_layout
         letter = "A"
         for i in range(self.ROWS * self.COLS):
@@ -113,13 +129,12 @@ class LetterSelect(QDialog, Ui_letter_select):
                 (self.ROWS-1, 0), (self.ROWS-1, self.COLS-1)
             ]: # Skip bottom corners
                 continue
-
             button = LetterButton(letter)
             button.onClicked.connect(self._on_select)
             layout.addWidget(button, row, col)
             letter = chr(ord(letter) + 1)
     
-    def reject(self):
+    def reject(self) -> None:
         """
         Overrides reject method to prevent user escaping 
         without selecting letter.
@@ -145,17 +160,12 @@ class TileSwap(QDialog, Ui_tile_swap):
         self._selected: set[TileSlot] = set()
         self._slot_map: dict[TileSlot, TileWidget] = {}
 
-        ui.selection_count.setProperty("role", "normal")
-        ui.selection_count.setProperty("variant", "muted")
-        self._counter = ui.selection_count
-
         self._render_window(ui)
         self._render_tiles(ui, tiles)
-    
         self._update()
 
         self._swap_button.clicked.connect(
-            lambda:  self.accept()
+            lambda: self.accept()
         )
         self._cancel_button.clicked.connect(
             lambda: self.reject()
@@ -204,16 +214,18 @@ class TileSwap(QDialog, Ui_tile_swap):
         self._update()
 
     def _render_window(self, ui: Ui_tile_swap) -> None:
-        self._shadow = style_pop_up(self, ui.window_frame)
-        
-        # Swap icon (top of window)
-        icon = QPixmap(str(self.SWAP_PATH))
-        ui.swap_icon.setPixmap(icon)
-        ui.swap_icon.setScaledContents(True)
-        ui.swap_icon.setProperty(
-            "role", "swap_icon"
+        self._shadow = style_pop_up(self, ui, modal=False)
+
+        # Swap icon
+        render_icon(
+            ui.swap_icon, self.SWAP_PATH, 
+            role_str="swap_icon"
         )
-        ui.title.setProperty("role", "sub_heading")
+
+        # Tile selection counter (under title)
+        ui.selection_count.setProperty("role", "normal")
+        ui.selection_count.setProperty("variant", "muted")
+        self._counter = ui.selection_count
 
         # Buttons (swap & skip, cancel)
         self._swap_button = ui.swap_button
@@ -270,6 +282,7 @@ class BotPeek(QDialog, Ui_bot_peek):
         super().__init__(parent)
         ui = Ui_bot_peek()
         ui.setupUi(self)
+
         self._render_window(ui)
         self._render_tiles(ui, tiles)
 
@@ -278,17 +291,7 @@ class BotPeek(QDialog, Ui_bot_peek):
         )
 
     def _render_window(self, ui: Ui_bot_peek) -> None:
-        self._shadow = style_pop_up(self, ui.frame)
-        
-        # Peek icon (top of window)
-        icon = QPixmap(str(self.EYE_PATH))
-        ui.peek_icon.setPixmap(icon)
-        ui.peek_icon.setScaledContents(True)
-        ui.peek_icon.setProperty(
-            "role", "peek_icon"
-        )
-        ui.title.setProperty("role", "sub_heading")
-
+        self._shdw = style_pop_up(self, ui, modal=False)
         self._close_button = ui.close_button
         ui.close_button.setProperty("role", "button")
         ui.close_button.setProperty("variant", "green")
@@ -328,15 +331,19 @@ class Dictionary(QDialog, Ui_dictionary):
 
         self._render_window(ui)
 
+        ui.text_input.setFocus()
+
         self._search_button.clicked.connect(
             self._search_word
         )
-
         self._close_button.clicked.connect(
             lambda: self.accept()
         )
     
     def _search_word(self) -> None:
+        """
+        Looks up word in dictionary and update text output.
+        """
         word = self._text_input.text().strip().upper()
         definition = DICTIONARY.get(word, None)
 
@@ -350,33 +357,38 @@ class Dictionary(QDialog, Ui_dictionary):
             self._text_output.style().polish(self._text_output)
 
     def _render_window(self, ui: Ui_dictionary) -> None:
-        self._shadow = style_pop_up(self, ui.frame)
-        ui.title.setProperty("role", "sub_heading")
+        self._shadow = style_pop_up(self, ui, modal=False)
 
+        # Text input
         self._text_input = ui.text_input
         ui.line.setProperty("role", "line")
 
+        # Search button
         self._search_button = ui.search_button
         self._search_button.setProperty("role", "button")
         self._search_button.setProperty("variant", "red")
 
+        # Text output (disabled)
         self._text_output = ui.text_output
         ui.text_output.setDisabled(True)
 
+        # Close button
         self._close_button = ui.close_button
         self._close_button.setProperty("role", "button")
         self._close_button.setProperty("variant", "green")
 
 
 class HintMenu(QDialog, Ui_hint_menu):
+    """
+    Dialog which asks user if they wish to accept a 
+    hint or not.
+    """
     def __init__(self, parent) -> None:
         super().__init__(parent)
         ui = Ui_hint_menu()
         ui.setupUi(self)
 
-        self._shadow = style_pop_up(self, ui.frame)
-
-        ui.title.setProperty("role", "sub_heading")
+        self._shdw = style_pop_up(self, ui, modal=False)
         ui.cancel_button.setProperty("role", "button")
         ui.play_button.setProperty("role", "button")
         ui.play_button.setProperty("variant", "blue")
@@ -387,3 +399,51 @@ class HintMenu(QDialog, Ui_hint_menu):
         ui.cancel_button.clicked.connect(
             lambda: self.reject()
         )
+
+
+class GameInfo(QDialog, Ui_game_info):
+    """
+    Pop up menu explaining Scrabble rules, bonus cell 
+    values, and bot behaviour.
+    """
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        ui = Ui_game_info()
+        ui.setupUi(self)
+
+        self._render_window(ui)
+    
+    def _render_window(self, ui: Ui_game_info) -> None:
+        ui.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        ui.line.setProperty("role", "line")
+
+        for label in (
+            ui.legend_label, ui.rules_label, 
+            ui.scrabble_bot_label
+        ):
+            label.setProperty("role", "sub_heading")
+        
+        for label in (
+            ui.credit_label, ui.rules_text, 
+            ui.scrabble_bot_text, ui.triple_letter_label, 
+            ui.double_letter_label, ui.triple_word_label, 
+            ui.double_word_label
+        ):
+            label.setProperty("role", "normal")
+            label.setProperty("variant", "muted")
+
+        ui.triple_word_cell.setProperty(
+            "role", "triple_word"
+        )
+        ui.double_word_cell.setProperty(
+            "role", "double_word"
+        )
+        ui.triple_letter_cell.setProperty(
+            "role", "triple_letter"
+        )
+        ui.double_letter_cell.setProperty(
+            "role", "double_letter"
+        )
+        self._shdw = style_pop_up(self, ui, modal=False)

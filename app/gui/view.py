@@ -10,7 +10,7 @@ from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
     TileSwap, LetterSelect, BotPeek, Dictionary,
-    HintMenu
+    HintMenu, GameInfo
 )
 from pathlib import Path
 
@@ -44,7 +44,7 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         self._info_panel = InfoPanel(self._ui)
 
         self._game_area.letterRequired.connect(
-            self._open_letter_select
+            self.open_letter_select
         )
 
         # Open window in full screen
@@ -58,11 +58,21 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     def button_console(self) -> ButtonConsole:
         return self._button_console
 
+    def open_game_info(self) -> None:
+        """Opens game info menu."""
+        game_info = GameInfo(self)
+        game_info.exec()
+
     def open_dictionary(self) -> None:
         """Opens dictionary menu letting user search words."""
         dictionary = Dictionary(self)
         dictionary.exec()
 
+    def open_bot_peek(self, bot_tiles: list[Tile]) -> None:
+        """Opens menu letting user see bot's tiles."""
+        bot_peek = BotPeek(self, bot_tiles)
+        bot_peek.exec()
+    
     def open_hint_menu(self) -> bool:
         """Opens dialog to choose to play suggested move."""
         hint_menu = HintMenu(self)
@@ -73,11 +83,6 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
 
         return result == QDialog.DialogCode.Accepted
 
-    def open_bot_peek(self, bot_tiles: list[Tile]) -> None:
-        """Opens menu letting user see bot's tiles."""
-        bot_peek = BotPeek(self, bot_tiles)
-        bot_peek.exec()
-
     def open_tile_swap(self, tiles: list[Tile]) -> list[Tile] | None:
         """Opens tile swap menu and returns selected tiles.."""
         tile_swap = TileSwap(self, tiles)
@@ -87,7 +92,7 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
             return tile_swap.selected
         return None
 
-    def _open_letter_select(self, tile: QObject) -> None:
+    def open_letter_select(self, tile: QObject) -> None:
         """Opens letter select menu for setting joker tile."""
         letter_select = LetterSelect(self)
         result = letter_select.exec()
