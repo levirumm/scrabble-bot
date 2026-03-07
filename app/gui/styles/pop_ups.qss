@@ -147,6 +147,12 @@ QLabel[role="toast"][variant="player"] {{
 
 QLabel[role="toast"][variant="bot"] {{
     background-color: {background[light]};
+    border: 2px solid {cell[hover_blank_cell]};
+    color: {cell[hover_blank_cell]};
+}}
+
+QLabel[role="toast"][variant="info"] {{
+    background-color: {background[light]};
     border: 2px solid {text[muted]};
     color: {text[muted]};
 }}

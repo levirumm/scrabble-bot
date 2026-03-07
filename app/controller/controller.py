@@ -78,7 +78,10 @@ class ScrabbleController:
         # Get move from move finder
         move = self._model.get_move(players=True)
         if not move.placements:
-            print("No move found")
+            self._view.show_toast(
+                message="No move found", 
+                toast_type=ToastType.INFO
+            )
             return
 
         self._view.game_area.show_hint_preview(move.placements)
@@ -120,9 +123,12 @@ class ScrabbleController:
         """
         if self._model.remaining_tiles < RACK_SLOTS:
             # Cannot skip if less than 7 tiles
-            print(
-                "Cannot swap with less than " \
-                "7 tiles remaining."
+            self._view.show_toast(
+                message=(
+                    "Cannot swap with less "
+                    "than 7 tiles remaining"
+                ), 
+                toast_type=ToastType.INFO
             )
             return
 
@@ -173,7 +179,10 @@ class ScrabbleController:
             self._view.update_turn_history(
                 self._model.turn, players
             )
-            print("Scrabble bot skipped")
+            self._view.show_toast(
+                message="Scrabble Bot skipped", 
+                toast_type=ToastType.BOT
+            )
             return
 
         result = self._model.process_move(move)

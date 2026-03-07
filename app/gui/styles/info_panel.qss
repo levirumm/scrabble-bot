@@ -18,12 +18,12 @@ QLabel[role="profile"]  {{
     color: white;
 }}
 
-QLabel[role="profile"][variant="player"] {{
+QLabel[role="profile"][variant="bot"] {{
     border: 1px solid {cell[hover_blank_cell]};
     background-color: {cell[blank_cell]};
 }}
 
-QLabel[role="profile"][variant="bot"] {{
+QLabel[role="profile"][variant="player"] {{
     border 1px solid {cell[hover_triple_letter]};
     background-color: {cell[triple_letter]};
 }}
