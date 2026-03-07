@@ -1,12 +1,16 @@
 from PySide6.QtWidgets import (
-    QDialog, QPushButton, QLabel, QGraphicsEffect
+    QDialog, QPushButton, QLabel, QFrame, QWidget,
+    QGraphicsEffect, QGraphicsOpacityEffect
 )
-from PySide6.QtCore import Qt, Signal, QEvent, QObject
+from PySide6.QtCore import (
+    Qt, Signal, QEvent, QObject, QPropertyAnimation, 
+    QTimer, QPoint
+)
 from PySide6.QtGui import QPixmap
 from app.gui.layout.ui_letter_select_menu import (
     Ui_letter_select
 )
-from app.model.types import Tile
+from app.model.types import Tile, ToastType
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.layout.ui_bot_peek import Ui_bot_peek
 from app.gui.layout.ui_dictionary import Ui_dictionary
@@ -18,10 +22,19 @@ from app.gui.game_area import (
 )
 from app.model.word_structures import DICTIONARY
 from pathlib import Path
+from typing import Protocol
+
+
+class PopUpMenu(Protocol):
+    """
+    Protocol for pop ups used by style function.
+    """
+    frame: QFrame
+    title: QLabel
 
 
 def style_pop_up(
-        window: QDialog, ui, modal: bool
+        window: QDialog, ui: PopUpMenu, modal: bool
     ) -> QGraphicsEffect:
     """
     Applies styling common to pop ups. Returns reference 
@@ -59,6 +72,50 @@ def render_icon(
     label.setPixmap(icon)
     label.setScaledContents(True)
     label.setProperty("role", role_str)
+
+
+class Toast:
+    """
+    Toast which appears at top-middle of window and fades 
+    away after a couple seconds.
+    """
+    TOAST_DURATION: int = 1200 # miliseconds
+
+    def __init__(
+            self, parent, message: str, type: ToastType
+        ) -> None:
+        # Create QLabel to act as toast
+        toast = QLabel(message, parent)
+        toast.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        toast.setProperty("role", "toast")
+        toast.setProperty("variant", type.value)
+        toast.adjustSize()
+        
+        # Define fade out effect
+        effect = QGraphicsOpacityEffect(toast)
+        effect.setOpacity(1.0)
+        toast.setGraphicsEffect(effect)
+        self._fade = QPropertyAnimation(
+            effect, b"opacity", toast
+        )
+        self._fade.setStartValue(1)
+        self._fade.setEndValue(0)
+        self._fade.finished.connect(
+            lambda: toast.deleteLater()
+        )
+
+        # Position toast in center of parent
+        center = parent.rect().center()
+        toast.move(
+            center.x() - toast.width() // 2,
+            center.y() - toast.height() // 2
+        )
+        toast.show()
+
+        # Initiate fade after delay
+        QTimer.singleShot(
+            self.TOAST_DURATION, self._fade.start
+        )
 
 
 class LetterButton(QPushButton):

@@ -1,7 +1,9 @@
+from PySide6.QtCore import QTimer
 from app.gui.view import ScrabbleView
 from app.model.model import ScrabbleModel
 from app.model.types import (
-    Tile, FormedWord, Move, MoveResult, ValidationResult
+    Tile, FormedWord, Move, MoveResult, 
+    ValidationResult, ToastType
 )
 from app.model.constants import RACK_SLOTS
 
@@ -11,6 +13,8 @@ class ScrabbleController:
     Controller of application which handles events and 
     coordinates updates of model and view.
     """
+    BOT_MOVE_DELAY: int = 2000
+
     def __init__(
             self, view: ScrabbleView, model: ScrabbleModel
         ) -> None:
@@ -97,7 +101,17 @@ class ScrabbleController:
         # Tiles should not be pending
         self._view.game_area.update_pending()
 
-        self._turn(players=False)
+        self._view.show_toast(
+            message=f"{move.score} points", 
+            toast_type=ToastType.PLAYER
+        )
+
+        self._view.game_area.set_buttons_disabled(True)
+
+        QTimer.singleShot(
+            self.BOT_MOVE_DELAY, 
+            lambda: self._turn(players=False)
+        )
 
     def _on_swap(self) -> None:
         """
@@ -111,14 +125,14 @@ class ScrabbleController:
                 "7 tiles remaining."
             )
             return
-        
-        self._view.game_area.recall()
 
         # Open tile swap menu
         selected = self._view.open_tile_swap(
             self._model.player_rack
         )
         if not selected: return
+
+        self._view.game_area.recall()
         
         # Get new tiles from model and update rack
         new_tiles = self._model.select_tiles(len(selected))
@@ -170,16 +184,32 @@ class ScrabbleController:
 
         self._update_game(move, result, players)
 
+        toast_type = (
+            ToastType.PLAYER if players else ToastType.BOT
+        )
+        self._view.show_toast(
+            message=f"{move.score} points", 
+            toast_type=toast_type
+        )
+
         if players:
-            # Initiate bot's turn
-            self._turn(players=False)
+            self._view.game_area.set_buttons_disabled(True)
+            QTimer.singleShot(
+                self.BOT_MOVE_DELAY, 
+                lambda: self._turn(players=False)
+            )
+        else:
+            self._view.game_area.set_buttons_disabled(False)
     
     def _validate_move(
             self, validation_result: ValidationResult
         ) -> bool:
         """Returns true if move is valid."""
         if not validation_result.is_valid:
-            print(validation_result.reason)
+            self._view.show_toast(
+                message=validation_result.reason, 
+                toast_type=ToastType.ERROR
+            )
             return False
         return True
 

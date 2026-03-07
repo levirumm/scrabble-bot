@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QWidget, QDialog
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QPoint
 from app.gui.layout.ui_scrabble_view import Ui_ScrabbleView
 from app.model.types import (
-    CellType, GameState, Tile, TilePlacement
+    CellType, GameState, Tile, ToastType
 )
 from app.gui.palette.palette import PALETTE
 from app.gui.button_console import ButtonConsole
@@ -10,7 +10,7 @@ from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
     TileSwap, LetterSelect, BotPeek, Dictionary,
-    HintMenu, GameInfo
+    HintMenu, GameInfo, Toast
 )
 from pathlib import Path
 
@@ -57,6 +57,12 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     @property
     def button_console(self) -> ButtonConsole:
         return self._button_console
+    
+    def show_toast(
+            self, message: str, toast_type: ToastType
+        ) -> None:
+        """Creates a toast to display message."""
+        Toast(parent=self._ui.board_container, message=message, type=toast_type)
 
     def open_game_info(self) -> None:
         """Opens game info menu."""

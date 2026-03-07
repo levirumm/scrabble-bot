@@ -401,22 +401,22 @@ class MoveProcessor:
         result = ValidationResult()
 
         if not flags.tiles_submitted:
-            result.reason = "No tiles submitted"
+            result.reason = "Place a tile before submitting"
         
         elif self._board.is_blank and not flags.uses_multiple_tiles:
-            result.reason = "Use multiple tiles"
+            result.reason = "First word must use multiple tiles"
             
         elif self._board.is_blank and not flags.uses_center_square:
-            result.reason = "Must use center square"
+            result.reason = "First word must use center square"
         
         elif not flags.forms_straight_line:
-            result.reason = "Must form a straight line"
+            result.reason = "Tiles must form a straight line"
         
         elif not flags.no_gaps:
             result.reason = "Word cannot have gaps"
         
         elif flags.invalid_word:
-            result.reason = f"Invalid word: {flags.invalid_word}"
+            result.reason = f"Word '{flags.invalid_word}'  not found"
         
         elif not flags.is_connected:
             result.reason = "Word must connect to an existing word"

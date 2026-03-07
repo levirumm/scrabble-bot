@@ -4,7 +4,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import (
     Qt, QSize, QMimeData, Signal, QEvent, QObject,
-    QTimer
+    QTimer, QPoint
 )
 from PySide6.QtGui import (
     QPainter, QFont, QDrag, QPixmap, QIcon, 
@@ -79,6 +79,17 @@ class GameArea(QObject):
         self._board.tilePlaced.connect(self._tile_placed)
         self._board.tileRemoved.connect(self._tile_removed)
     
+    def set_buttons_disabled(self, disabled: bool) -> None:
+        """
+        Disabled or enables buttons that should not always 
+        be allowed.
+        """
+        for button in [
+            self._skip_button, self._swap_button, 
+            self._submit_button
+        ]:
+            button.setDisabled(disabled)
+
     def apply_move(
             self, placements: list[TilePlacement], 
             pending: bool = True
@@ -153,7 +164,7 @@ class BoardWidget(QWidget):
     @property
     def cells(self) -> list[list["CellWidget"]]:
         return self._cells
-
+    
     def update_pending(self) -> None:
         """Sets tiles in pending to normal style."""
         for tile_widget in self._pending_tiles:

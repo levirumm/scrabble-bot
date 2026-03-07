@@ -123,3 +123,30 @@ QLabel[role="double_letter"] {{
     border: 1px solid {cell[hover_double_letter]};
     border-radius: 3px;
 }}
+
+
+/* Toasts */
+QLabel[role="toast"] {{
+    border-radius: 5px;
+    font-family: Sans Serif;
+    font-size: 12pt;
+    padding: 12px 12px;
+}}
+
+QLabel[role="toast"][variant="error"] {{
+    background-color: {cell[triple_word]};
+    border: 2px solid {background[light]};
+    color: {background[light]};
+}}
+
+QLabel[role="toast"][variant="player"] {{
+    background-color: {background[light]};
+    border: 2px solid {cell[triple_letter]};
+    color: {cell[triple_letter]};
+}}
+
+QLabel[role="toast"][variant="bot"] {{
+    background-color: {background[light]};
+    border: 2px solid {text[muted]};
+    color: {text[muted]};
+}}

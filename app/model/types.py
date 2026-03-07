@@ -17,6 +17,13 @@ class CellState(Enum):
     LOCKED = auto() # Tile committed from previous turn
 
 
+class ToastType(Enum):
+    ERROR = "error"
+    PLAYER = "player"
+    BOT = "bot"
+    INFO = "info"
+
+
 @dataclass
 class GameState:
     player_points: int
