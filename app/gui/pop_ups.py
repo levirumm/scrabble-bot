@@ -74,48 +74,74 @@ def render_icon(
     label.setProperty("role", role_str)
 
 
-class Toast:
+class ToastManager(QObject):
+    """Manages toasts to avoid stacking."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._toast: Toast | None = None
+
+    def show_toast(self, parent, message: str, type: ToastType) -> None:
+        """Creates a toast instance, deleting previous if exists."""
+        if self._toast:
+            self._toast.hide()
+        self._toast = Toast(parent, message, type)
+        self._toast.toastClosed.connect(self._close_toast)
+
+    def _close_toast(self) -> None:
+        self._toast = None
+
+
+class Toast(QObject):
     """
     Toast which appears at top-middle of window and fades 
     away after a couple seconds.
     """
     TOAST_DURATION: int = 1200 # miliseconds
 
+    toastClosed = Signal()
+
     def __init__(
             self, parent, message: str, type: ToastType
         ) -> None:
+        super().__init__()
         # Create QLabel to act as toast
-        toast = QLabel(message, parent)
-        toast.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        toast.setProperty("role", "toast")
-        toast.setProperty("variant", type.value)
-        toast.adjustSize()
+        self._toast = QLabel(message, parent)
+        self._toast.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._toast.setProperty("role", "toast")
+        self._toast.setProperty("variant", type.value)
+        self._toast.adjustSize()
         
         # Define fade out effect
-        effect = QGraphicsOpacityEffect(toast)
+        effect = QGraphicsOpacityEffect(self._toast)
         effect.setOpacity(1.0)
-        toast.setGraphicsEffect(effect)
+        self._toast.setGraphicsEffect(effect)
         self._fade = QPropertyAnimation(
-            effect, b"opacity", toast
+            effect, b"opacity", self._toast
         )
         self._fade.setStartValue(1)
         self._fade.setEndValue(0)
-        self._fade.finished.connect(
-            lambda: toast.deleteLater()
-        )
+        self._fade.finished.connect(self._destroy)
 
-        # Position toast in center of parent
+        # Position self._toast in center of parent
         center = parent.rect().center()
-        toast.move(
-            center.x() - toast.width() // 2,
-            center.y() - toast.height() // 2
+        self._toast.move(
+            center.x() - self._toast.width() // 2,
+            center.y() - self._toast.height() // 2
         )
-        toast.show()
+        self._toast.show()
 
         # Initiate fade after delay
         QTimer.singleShot(
             self.TOAST_DURATION, self._fade.start
         )
+    
+    def hide(self) -> None:
+        self._toast.hide()
+        
+    def _destroy(self) -> None:
+        self.deleteLater()
+        self.toastClosed.emit()
 
 
 class LetterButton(QPushButton):

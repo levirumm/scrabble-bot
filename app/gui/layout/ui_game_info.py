@@ -236,7 +236,7 @@ class Ui_game_info(object):
     def retranslateUi(self, game_info):
         game_info.setWindowTitle(QCoreApplication.translate("game_info", u"Dialog", None))
         self.title.setText(QCoreApplication.translate("game_info", u"Game Info", None))
-        self.credit_label.setText(QCoreApplication.translate("game_info", u"Created by Levi Rummukainen, 2026\n"
+        self.credit_label.setText(QCoreApplication.translate("game_info", u"Created by Levi Rummukainen, 2026.\n"
 "Uses words from the 2019 Collins Scrabble Dictionary", None))
         self.rules_label.setText(QCoreApplication.translate("game_info", u"Rules", None))
         self.rules_text.setText(QCoreApplication.translate("game_info", u"Place tiles on the board to form words. Use bonus squares to increase your score.\n"

@@ -447,7 +447,7 @@ class Ui_ScrabbleView(object):
     def retranslateUi(self, ScrabbleView):
         ScrabbleView.setWindowTitle(QCoreApplication.translate("ScrabbleView", u"Form", None))
 #if QT_CONFIG(tooltip)
-        self.info_icon.setToolTip(QCoreApplication.translate("ScrabbleView", u"View instructions", None))
+        self.info_icon.setToolTip(QCoreApplication.translate("ScrabbleView", u"View game info", None))
 #endif // QT_CONFIG(tooltip)
         self.info_icon.setText("")
 #if QT_CONFIG(tooltip)

@@ -10,7 +10,7 @@ from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
     TileSwap, LetterSelect, BotPeek, Dictionary,
-    HintMenu, GameInfo, Toast
+    HintMenu, GameInfo, ToastManager
 )
 from pathlib import Path
 
@@ -47,6 +47,8 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
             self.open_letter_select
         )
 
+        self._toast_manager = ToastManager()
+
         # Open window in full screen
         self.showMaximized()
     
@@ -62,7 +64,10 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
             self, message: str, toast_type: ToastType
         ) -> None:
         """Creates a toast to display message."""
-        Toast(parent=self._ui.board_container, message=message, type=toast_type)
+        self._toast_manager.show_toast(
+            parent=self._ui.board_container, 
+            message=message, type=toast_type
+        )
 
     def open_game_info(self) -> None:
         """Opens game info menu."""

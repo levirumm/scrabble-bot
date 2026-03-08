@@ -171,7 +171,7 @@
               <cursorShape>PointingHandCursor</cursorShape>
              </property>
              <property name="toolTip">
-              <string>View instructions</string>
+              <string>View game info</string>
              </property>
              <property name="text">
               <string/>

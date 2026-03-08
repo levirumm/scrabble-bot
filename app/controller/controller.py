@@ -8,6 +8,12 @@ from app.model.types import (
 from app.model.constants import RACK_SLOTS
 
 
+"""
+Bug Report: Hint button is not disabled during bot move 
+so can place multiple tiles in same cell.
+"""
+
+
 class ScrabbleController:
     """
     Controller of application which handles events and 
@@ -83,7 +89,6 @@ class ScrabbleController:
                 toast_type=ToastType.INFO
             )
             return
-
         self._view.game_area.show_hint_preview(move.placements)
 
         # Ask user if they will accept hint
