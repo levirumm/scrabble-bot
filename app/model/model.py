@@ -26,6 +26,7 @@ class ScrabbleModel:
         self._bot_rack: list[Tile] = []
         self._board = ScrabbleBoard()
         self._letter_bag = LetterBag()
+        self._consecutive_skips: int = 0
 
         # Logicall objects
         self._trie = Trie()
@@ -71,6 +72,7 @@ class ScrabbleModel:
         return self._letter_bag.remaining_tiles
 
     def skip(self) -> None:
+        self._consecutive_skips += 1
         self._turn += 1
 
     def select_tiles(self, selections: int) -> list[Tile]:
@@ -155,6 +157,22 @@ class ScrabbleModel:
             self._player_points += move.score
         else:
             self._bot_points += move.score
+    
+    def formed_words_to_strings(
+            self, formed_words: list[FormedWord | None]
+        ) -> list[str]:
+        """
+        Helper function which converts formed words to strings.
+        """
+        formed_str = [] # Formed word strings for history
+        for word in formed_words:
+            if len(word.tiles) == 1: # type: ignore
+                continue
+            formed_str.append(
+                "".join(tile.tile.letter 
+                for tile in word.tiles) # type: ignore
+            )
+        return formed_str
         
 
 class MoveProcessor:

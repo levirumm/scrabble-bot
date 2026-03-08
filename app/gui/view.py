@@ -125,6 +125,39 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         self._info_panel.update_turn_history(
            turn, players, score, formed_words 
         )
+    
+    def disable_for_bot_move(self, disable: bool) -> None:
+        """Disableds buttons so user cannot interfere with bot move."""
+        self._game_area.set_buttons_disabled(disable)
+        self._button_console.set_buttons_disabled(disable)
+    
+    def connect_to_controller(self, controller):
+            # Connect slots to button panel
+        self._game_area.skipPressed.connect(controller._on_skip)
+        self.game_area.swapPressed.connect(controller._on_swap)
+        self.game_area.submitPressed.connect(controller._on_submit)
+
+        # Connect slots to game events
+        self.game_area.tilePlaced.connect(
+            controller._on_tile_placed
+        )
+        self.game_area.tileRemoved.connect(
+            controller._on_tile_removed
+        )
+
+        # Connect slots to button console
+        self.button_console.infoPressed.connect(
+            self.open_game_info
+        )
+        self.button_console.dictPressed.connect(
+            self.open_dictionary
+        )
+        self.button_console.peekPressed.connect(
+            controller._see_bot_rack
+        )
+        self.button_console.hintPressed.connect(
+            controller._get_hint
+        )
 
     def _load_qss(self) -> str:
         """

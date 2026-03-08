@@ -2,6 +2,7 @@ BOARD_SIZE: int = 15 # Standard Scrabble board is 15 x 15
 RACK_SLOTS: int = 7  # Max tiles in players letter rack
 JOKER_CHAR: str = "?"
 BINGO_BONUS: int = 50
+MAX_CONSECUTIVE_SKIPS: int = 4
 
 LETTER_SCORES: dict[str, int] = {
     # Maps letters to their points value

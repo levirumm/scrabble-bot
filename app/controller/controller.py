@@ -5,13 +5,9 @@ from app.model.types import (
     Tile, FormedWord, Move, MoveResult, 
     ValidationResult, ToastType
 )
-from app.model.constants import RACK_SLOTS
-
-
-"""
-Bug Report: Hint button is not disabled during bot move 
-so can place multiple tiles in same cell.
-"""
+from app.model.constants import (
+    RACK_SLOTS, MAX_CONSECUTIVE_SKIPS
+)
 
 
 class ScrabbleController:
@@ -27,34 +23,9 @@ class ScrabbleController:
         self._view: ScrabbleView = view
         self._model: ScrabbleModel = model
 
+        self._view.connect_to_controller(self)
+
         self._start_game()
-
-        # Connect slots to button panel
-        self._view.game_area.skipPressed.connect(self._on_skip)
-        self._view.game_area.swapPressed.connect(self._on_swap)
-        self._view.game_area.submitPressed.connect(self._on_submit)
-
-        # Connect slots to game events
-        self._view.game_area.tilePlaced.connect(
-            self._on_tile_placed
-        )
-        self._view.game_area.tileRemoved.connect(
-            self._on_tile_removed
-        )
-
-        # Connect slots to button console
-        self._view.button_console.infoPressed.connect(
-            self._view.open_game_info
-        )
-        self._view.button_console.dictPressed.connect(
-            self._view.open_dictionary
-        )
-        self._view.button_console.peekPressed.connect(
-            self._see_bot_rack
-        )
-        self._view.button_console.hintPressed.connect(
-            self._get_hint
-        )
 
     def _on_submit(self) -> None:
         self._turn(players=True)
@@ -62,18 +33,30 @@ class ScrabbleController:
     def _on_tile_placed(
             self, row: int, col: int, tile: Tile
         ) -> None:
-        """Adds tile placement to model."""
         self._model.board.place_tile(row, col, tile)
     
     def _on_tile_removed(self, row: int, col: int) -> None:
-        """Removes tile placement from model."""
         self._model.board.remove_tile(row, col)
     
     def _see_bot_rack(self) -> None:
-        """Opens menu showing bot's tiles to user."""
         bot_tiles = self._model.bot_rack
         self._view.open_bot_peek(bot_tiles)
     
+    def _bot_move_after_delay(self) -> None:
+        """
+        Initiates not move after delay, disabling buttons 
+        to prevent interference.
+        """
+        self._view.disable_for_bot_move(True)
+        QTimer.singleShot(
+            self.BOT_MOVE_DELAY, self._init_bot_move
+        )
+    
+    def _init_bot_move(self) -> None:
+        """Helper function called after delay."""
+        self._view.disable_for_bot_move(False)
+        self._turn(players=False)
+
     def _get_hint(self) -> None:
         """
         Gets a hint from move finder, previews, and applies 
@@ -103,7 +86,8 @@ class ScrabbleController:
         # Process and apply move
         result = self._model.process_move(move)
         self._model.apply_move(result, players=True)
-        self._update_game(move, result, players=True, hint=True)
+        self._update_rack(result, player=True, hint=True)
+        self._update_game(move, result, players=True)
         self._view.game_area.apply_move(move.placements)
 
         # Tiles should not be pending
@@ -114,12 +98,7 @@ class ScrabbleController:
             toast_type=ToastType.PLAYER
         )
 
-        self._view.game_area.set_buttons_disabled(True)
-
-        QTimer.singleShot(
-            self.BOT_MOVE_DELAY, 
-            lambda: self._turn(players=False)
-        )
+        self._bot_move_after_delay()
 
     def _on_swap(self) -> None:
         """
@@ -158,19 +137,26 @@ class ScrabbleController:
         self._on_skip() # Skip players turn
     
     def _on_skip(self) -> None:
-        """
-        Recalls tiles, skips player's turn, and initiates 
-        bot's turn.
-        """
+        """Recalls tiles and skips turn."""
         self._view.game_area.recall()
+        self._skip(player=True)
+    
+    def _skip(self, player: bool) -> None:
+        """Skips turn and inititates opponent turn."""
         self._model.skip()
         self._view.game_area.update_pending()
-
         self._view.update_turn_history(
-            self._model.turn, players=True
+            self._model.turn, players=player
         )
-        self._turn(players=False)
-    
+        self._consective_skips += 1
+
+        if self._consective_skips >= MAX_CONSECUTIVE_SKIPS:
+            print("game_over")
+            return
+        
+        if player:
+            self._turn(players=not player)
+
     def _turn(self, players: bool) -> None:
         """Gets move, processes and applies if valid."""
         move = (
@@ -180,21 +166,22 @@ class ScrabbleController:
 
         if not players and not move.placements:
             # Bot was unable to find move. Skip turn.
-            self._model.skip()
-            self._view.update_turn_history(
-                self._model.turn, players
-            )
             self._view.show_toast(
                 message="Scrabble Bot skipped", 
                 toast_type=ToastType.BOT
             )
+            self._skip(player=False)
             return
 
         result = self._model.process_move(move)
         if not self._validate_move(result.validation_result):
             return
+        
+        self._consective_skips = 0
 
         self._model.apply_move(result, players=players)
+
+        self._update_rack(result, players)
 
         self._update_game(move, result, players)
 
@@ -207,14 +194,8 @@ class ScrabbleController:
         )
 
         if players:
-            self._view.game_area.set_buttons_disabled(True)
-            QTimer.singleShot(
-                self.BOT_MOVE_DELAY, 
-                lambda: self._turn(players=False)
-            )
-        else:
-            self._view.game_area.set_buttons_disabled(False)
-    
+           self._bot_move_after_delay()
+
     def _validate_move(
             self, validation_result: ValidationResult
         ) -> bool:
@@ -226,13 +207,11 @@ class ScrabbleController:
             )
             return False
         return True
-
-    def _update_game(
-            self, move: Move, result: MoveResult, 
-            players: bool, hint: bool = False
+    
+    def _update_rack(
+            self, result: MoveResult, player: bool, 
+            hint: bool = False
         ) -> None:
-        """Applies move to model and updates GUI."""
-        # Get new tiles
         new_tiles = self._model.select_tiles(
             len(result.move.placements)
         )
@@ -240,15 +219,25 @@ class ScrabbleController:
 
         # Update letter rack of move maker
         self._model.update_rack(
-            players, new_tiles, used_tiles
+            player, new_tiles, used_tiles
         )
 
+        if player:
+            self._view.game_area.update_player_rack(
+            new_tiles, used_tiles, hint=hint
+        )
+
+    def _update_game(
+            self, move: Move, result: MoveResult, 
+            players: bool
+        ) -> None:
+        """Applies move to model and updates GUI."""
         # Update info panel and turn history
         game_state = self._model.game_state
         self._view.update_info_panel(game_state)
 
         # Apply move to turn history
-        formed_str = self._formed_words_to_strings(
+        formed_str = self._model.formed_words_to_strings(
             [result.formed_words.main_word] 
             + result.formed_words.cross_words
         )
@@ -258,17 +247,15 @@ class ScrabbleController:
         )
 
         # Update rack if players, else update board
-        if players:
-            self._view.game_area.update_player_rack(
-                new_tiles, used_tiles, hint=hint
-            )
-        else:
+        if not players:
             self._view.game_area.apply_move(
                 result.move.placements
             )
 
     def _start_game(self) -> None:
         """Set initial conditions of Scrabble game."""
+        self._consective_skips: int = 0
+        
         # Initiate full letter racks for player and bot
         player_tiles = self._model.select_tiles(RACK_SLOTS)
         bot_tiles = self._model.select_tiles(RACK_SLOTS)
@@ -281,19 +268,3 @@ class ScrabbleController:
 
         # Update info panel to match model
         self._view.update_info_panel(self._model.game_state)
-
-    def _formed_words_to_strings(
-            self, formed_words: list[FormedWord | None]
-        ) -> list[str]:
-        """
-        Helper function which converts formed words to strings.
-        """
-        formed_str = [] # Formed word strings for history
-        for word in formed_words:
-            if len(word.tiles) == 1: # type: ignore
-                continue
-            formed_str.append(
-                "".join(tile.tile.letter 
-                for tile in word.tiles) # type: ignore
-            )
-        return formed_str

@@ -75,6 +75,9 @@ class ButtonConsole(QObject):
     def hint_button_coords(self) -> QPoint:
         return self._hint_icon.mapToGlobal(QPoint(0, 0))
 
+    def set_buttons_disabled(self, disable: bool) -> None:
+        self._hint_icon.setDisabled(disable)
+        
     def _create_icon(
             self, button: QPushButton, key: str, 
             small: bool = False
