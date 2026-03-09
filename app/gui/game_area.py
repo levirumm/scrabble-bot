@@ -90,11 +90,11 @@ class GameArea(QObject):
         ]:
             button.setDisabled(disabled)
 
-    def apply_move(
+    def apply_move_to_board(
             self, placements: list[TilePlacement], 
             pending: bool = True
         ) -> None:
-        self._board.apply_move(placements, pending)
+        self._board.apply_move_to_board(placements, pending)
     
     def show_hint_preview(self, placements: list[TilePlacement]) -> None:
         self._board.show_hint_preview(placements)
@@ -177,7 +177,7 @@ class BoardWidget(QWidget):
             tile_widget.slot.clear()
         self._hint_tiles: dict = {}
     
-    def apply_move(
+    def apply_move_to_board(
             self, tiles: list[TilePlacement], 
             pending: bool = True
         ) -> None:
@@ -190,7 +190,7 @@ class BoardWidget(QWidget):
         self._pending_tiles.extend(tile_widgets)
 
         for tile in self._pending_tiles:
-            tile.set_pending(True)
+            tile.set_pending(pending)
     
     def show_hint_preview(self, tiles: list[TilePlacement]) -> None:
         self._hint_tiles: dict = {}

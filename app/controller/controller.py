@@ -2,8 +2,8 @@ from PySide6.QtCore import QTimer
 from app.gui.view import ScrabbleView
 from app.model.model import ScrabbleModel
 from app.model.types import (
-    Tile, FormedWord, Move, MoveResult, 
-    ValidationResult, ToastType
+    Tile, Move, MoveResult, ToastType, 
+    TurnType
 )
 from app.model.constants import (
     RACK_SLOTS, MAX_CONSECUTIVE_SKIPS
@@ -27,9 +27,6 @@ class ScrabbleController:
 
         self._start_game()
 
-    def _on_submit(self) -> None:
-        self._turn(players=True)
-    
     def _on_tile_placed(
             self, row: int, col: int, tile: Tile
         ) -> None:
@@ -42,64 +39,49 @@ class ScrabbleController:
         bot_tiles = self._model.bot_rack
         self._view.open_bot_peek(bot_tiles)
     
-    def _bot_move_after_delay(self) -> None:
+    def _player_turn(self) -> None:
+        self._move(TurnType.PLAYER)
+
+    def _get_hint(self) -> None:
+        self._view.game_area.recall()
+        self._move(TurnType.HINT)
+    
+    def _bot_turn_after_delay(self) -> None:
         """
         Initiates not move after delay, disabling buttons 
         to prevent interference.
         """
         self._view.disable_for_bot_move(True)
         QTimer.singleShot(
-            self.BOT_MOVE_DELAY, self._init_bot_move
+            self.BOT_MOVE_DELAY, self._init_bot_turn
         )
     
-    def _init_bot_move(self) -> None:
+    def _init_bot_turn(self) -> None:
         """Helper function called after delay."""
         self._view.disable_for_bot_move(False)
-        self._turn(players=False)
-
-    def _get_hint(self) -> None:
-        """
-        Gets a hint from move finder, previews, and applies 
-        if user accepts.
-        """
+        self._move(TurnType.BOT)
+    
+    def _on_skip(self) -> None:
+        """Recalls tiles and skips turn."""
         self._view.game_area.recall()
-
-        # Get move from move finder
-        move = self._model.get_move(players=True)
-        if not move.placements:
-            self._view.show_toast(
-                message="No move found", 
-                toast_type=ToastType.INFO
-            )
-            return
-        self._view.game_area.show_hint_preview(move.placements)
-
-        # Ask user if they will accept hint
-        if not self._view.open_hint_menu():
-            self._view.game_area.remove_hint_preview()
-            return
-        self._view.game_area.remove_hint_preview()
-
-        # Update any pending tiles from bot move
+        self._skip(player=True)
+    
+    def _skip(self, player: bool) -> None:
+        """Skips turn and inititates opponent turn."""
+        self._model.skip()
         self._view.game_area.update_pending()
-
-        # Process and apply move
-        result = self._model.process_move(move)
-        self._model.apply_move(result, players=True)
-        self._update_rack(result, player=True, hint=True)
-        self._update_game(move, result, players=True)
-        self._view.game_area.apply_move(move.placements)
-
-        # Tiles should not be pending
-        self._view.game_area.update_pending()
-
-        self._view.show_toast(
-            message=f"{move.score} points", 
-            toast_type=ToastType.PLAYER
+        self._view.update_turn_history(
+            self._model.turn, players=player
         )
+        self._consective_skips += 1
 
-        self._bot_move_after_delay()
-
+        if self._consective_skips >= MAX_CONSECUTIVE_SKIPS:
+            self._on_game_over()
+            return
+        
+        if player:
+            self._move(TurnType.BOT)
+    
     def _on_swap(self) -> None:
         """
         Allows user to select tiles to swap. Gets new tiles 
@@ -136,102 +118,161 @@ class ScrabbleController:
         )
         self._on_skip() # Skip players turn
     
-    def _on_skip(self) -> None:
-        """Recalls tiles and skips turn."""
-        self._view.game_area.recall()
-        self._skip(player=True)
-    
-    def _skip(self, player: bool) -> None:
-        """Skips turn and inititates opponent turn."""
-        self._model.skip()
-        self._view.game_area.update_pending()
-        self._view.update_turn_history(
-            self._model.turn, players=player
-        )
-        self._consective_skips += 1
+    def _move(self, turn_type: TurnType) -> None:
+        """Initiates a player, bot, or hint turn."""
+        move = self._get_move(turn_type)
 
-        if self._consective_skips >= MAX_CONSECUTIVE_SKIPS:
-            print("game_over")
+        if not self._handle_no_move(turn_type, move):
             return
         
-        if player:
-            self._turn(players=not player)
-
-    def _turn(self, players: bool) -> None:
-        """Gets move, processes and applies if valid."""
-        move = (
-            self._model.get_player_move() if players 
-            else self._model.get_move(players=False)
-        )
-
-        if not players and not move.placements:
-            # Bot was unable to find move. Skip turn.
-            self._view.show_toast(
-                message="Scrabble Bot skipped", 
-                toast_type=ToastType.BOT
-            )
-            self._skip(player=False)
+        if (
+            turn_type is TurnType.HINT and 
+            not self._ask_accept_hint(move)
+        ):
+            # Return if hint is not accepted
             return
 
         result = self._model.process_move(move)
-        if not self._validate_move(result.validation_result):
-            return
-        
-        self._consective_skips = 0
 
-        self._model.apply_move(result, players=players)
-
-        self._update_rack(result, players)
-
-        self._update_game(move, result, players)
-
-        toast_type = (
-            ToastType.PLAYER if players else ToastType.BOT
-        )
-        self._view.show_toast(
-            message=f"{move.score} points", 
-            toast_type=toast_type
-        )
-
-        if players:
-           self._bot_move_after_delay()
-
-    def _validate_move(
-            self, validation_result: ValidationResult
-        ) -> bool:
-        """Returns true if move is valid."""
-        if not validation_result.is_valid:
+        # Check validation flags for player move
+        if (
+            turn_type is TurnType.PLAYER and 
+            not result.validation_result.is_valid
+        ):
             self._view.show_toast(
-                message=validation_result.reason, 
+                message=result.validation_result.reason, 
                 toast_type=ToastType.ERROR
             )
+            return
+
+        new_tiles = self._apply_move(move, result, turn_type)
+        
+        player = turn_type is not TurnType.BOT
+
+        self._show_move_toast(move, player)
+
+        if self._is_terminating_move(new_tiles, player):
+            self._on_game_over()
+            return
+    
+        if turn_type is not TurnType.BOT:
+            self._bot_turn_after_delay()
+    
+    def _get_move(self, turn_type: TurnType):
+        """Gets the move for each turn type."""
+        if turn_type is TurnType.PLAYER:
+            return self._model.get_player_move()
+        return self._model.get_move(turn_type is TurnType.HINT)
+
+    def _handle_no_move(
+            self, turn_type: TurnType, move: Move
+        ) -> bool:
+        """Handles no move cases for each turn type."""
+        if move.placements:
+            return True
+
+        if turn_type is TurnType.HINT:
+            self._view.show_toast("No move found", ToastType.INFO)
+            return False
+
+        if turn_type is TurnType.BOT:
+            self._view.show_toast("Scrabble Bot skipped", ToastType.BOT)
+            self._skip(player=False)
             return False
         return True
     
-    def _update_rack(
-            self, result: MoveResult, player: bool, 
-            hint: bool = False
-        ) -> None:
+    def _apply_move(
+            self, move: Move, result: MoveResult, 
+            turn_type: TurnType
+        ) -> list[Tile]:
+        """
+        Applies move to model and updates view elements based 
+        on move type.
+        """
+        # Update model
+        player = turn_type is not TurnType.BOT
+        self._consective_skips = 0
+        self._model.apply_move(result, players=player)
+        new_tiles, used_tiles = self._update_model_rack(
+            result, player=player
+        )
+
+        # Update info panel
+        self._update_info_panel(move, result, players=player)
+
+        # Update view elements for move type
+        if turn_type is TurnType.PLAYER:
+            self._view.game_area.update_player_rack(new_tiles, used_tiles)
+
+        elif turn_type is TurnType.BOT:
+            self._view.game_area.apply_move_to_board(move.placements)
+
+        elif turn_type is TurnType.HINT:
+            self._view.game_area.update_player_rack(
+                new_tiles, used_tiles, hint=True
+            )
+            self._view.game_area.apply_move_to_board(
+                move.placements, pending=False
+            )
+        return new_tiles
+        
+    def _ask_accept_hint(self, move: Move) -> bool:
+        """
+        Opens menu to ask user to accep hint, returning true 
+        if user accepts.
+        """
+        self._view.game_area.show_hint_preview(move.placements)
+        if not self._view.open_hint_menu():
+            self._view.game_area.remove_hint_preview()
+            return False
+        self._view.game_area.remove_hint_preview()
+
+        # Update any pending tiles from bot move
+        self._view.game_area.update_pending()
+        return True
+
+    def _is_terminating_move(
+            self, new_tiles: list[Tile], player: bool
+        ) -> bool:
+        """Returns true if no tiles and mover's rack is empty."""
+        return (
+            not new_tiles and 
+            self._model.empty_rack(player=player)
+        )
+        
+    def _show_move_toast(self, move: Move, player: bool) -> None:
+        """Shows toast for move."""
+        self._view.show_toast(
+            message=f"{move.score} points", 
+            toast_type=(
+                ToastType.PLAYER if player 
+                else ToastType.BOT
+            )
+        )
+    
+    def _update_model_rack(
+            self, result: MoveResult, player: bool
+        ) -> tuple:
+        """
+        Gets new tiles from letter bag and updates model 
+        letter rack.
+        """
         new_tiles = self._model.select_tiles(
             len(result.move.placements)
         )
-        used_tiles = [tp.tile for tp in result.move.placements]
-
-        # Update letter rack of move maker
+        used_tiles = (
+            [tp.tile for tp in result.move.placements]
+        )
         self._model.update_rack(
             player, new_tiles, used_tiles
         )
+        return new_tiles, used_tiles
 
-        if player:
-            self._view.game_area.update_player_rack(
-            new_tiles, used_tiles, hint=hint
-        )
-
-    def _update_game(
+    def _update_info_panel(
             self, move: Move, result: MoveResult, 
             players: bool
         ) -> None:
-        """Applies move to model and updates GUI."""
+        """Applies move to info panel"""
         # Update info panel and turn history
         game_state = self._model.game_state
         self._view.update_info_panel(game_state)
@@ -245,12 +286,9 @@ class ScrabbleController:
             game_state.turn, players, 
             move.score, formed_str
         )
-
-        # Update rack if players, else update board
-        if not players:
-            self._view.game_area.apply_move(
-                result.move.placements
-            )
+    
+    def _on_game_over(self) -> None:
+        print("game over")
 
     def _start_game(self) -> None:
         """Set initial conditions of Scrabble game."""

@@ -24,6 +24,12 @@ class ToastType(Enum):
     INFO = "info"
 
 
+class TurnType(Enum):
+    PLAYER = auto()
+    BOT = auto()
+    HINT = auto()
+
+
 @dataclass
 class GameState:
     player_points: int

@@ -80,6 +80,12 @@ class ScrabbleModel:
 
     def get_definition(self, word: str) -> str | None:
         return DICTIONARY.get(word, None)
+    
+    def empty_rack(self, player: bool) -> bool:
+        rack = (
+            self._player_rack if player else self._bot_rack
+        )
+        return not rack
 
     def update_rack(
             self, players: bool, new_tiles: list[Tile], 

@@ -85,6 +85,7 @@ class ToastManager(QObject):
         """Creates a toast instance, deleting previous if exists."""
         if self._toast:
             self._toast.hide()
+            self._toast.deleteLater()
         self._toast = Toast(parent, message, type)
         self._toast.toastClosed.connect(self._close_toast)
 
@@ -107,6 +108,9 @@ class Toast(QObject):
         super().__init__()
         # Create QLabel to act as toast
         self._toast = QLabel(message, parent)
+        self._toast.setAttribute(
+            Qt.WidgetAttribute.WA_TransparentForMouseEvents
+        )
         self._toast.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._toast.setProperty("role", "toast")
         self._toast.setProperty("variant", type.value)

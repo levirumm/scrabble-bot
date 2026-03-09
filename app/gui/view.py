@@ -135,7 +135,7 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
             # Connect slots to button panel
         self._game_area.skipPressed.connect(controller._on_skip)
         self.game_area.swapPressed.connect(controller._on_swap)
-        self.game_area.submitPressed.connect(controller._on_submit)
+        self.game_area.submitPressed.connect(controller._player_turn)
 
         # Connect slots to game events
         self.game_area.tilePlaced.connect(
