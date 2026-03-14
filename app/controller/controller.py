@@ -40,7 +40,8 @@ class ScrabbleController:
         self._view.open_bot_peek(bot_tiles)
     
     def _on_resign(self) -> None:
-        self._on_game_over(resigned=True)
+        if self._view.open_resign_dialog():
+            self._on_game_over(resigned=True)
 
     def _player_turn(self) -> None:
         self._move(TurnType.PLAYER)

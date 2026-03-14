@@ -19,6 +19,7 @@ from app.gui.layout.ui_dictionary import Ui_dictionary
 from app.gui.layout.ui_hint_menu import Ui_hint_menu
 from app.gui.layout.ui_game_info import Ui_game_info
 from app.gui.layout.ui_game_over_menu import Ui_game_over_menu
+from app.gui.layout.ui_resign_menu import Ui_resign_menu
 from app.gui.information_panel import ScoreBox
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
@@ -598,3 +599,35 @@ class GameOverMenu(QDialog, Ui_game_over_menu):
         without selecting letter.
         """
         pass 
+
+    
+class ResignMenu(QDialog, Ui_resign_menu):
+    FLAG_PATH = (
+        Path(__file__).parent.parent.parent 
+        / "assets" / "flag.png"
+    )
+
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+        ui = Ui_resign_menu()
+        ui.setupUi(self)
+
+        self._render_window(ui)
+    
+    def _render_window(self, ui: Ui_resign_menu) -> None:
+        self._shdw = style_pop_up(self, ui, modal=False)
+
+        render_icon(
+            ui.icon, self.FLAG_PATH,
+            role_str="joker_icon"
+        )
+
+        ui.cancel_button.setProperty("role", "button")
+        ui.cancel_button.clicked.connect(
+            lambda: self.reject()
+        )
+        ui.resign_button.setProperty("role", "button")
+        ui.resign_button.setProperty("variant", "red")
+        ui.resign_button.clicked.connect(
+            lambda: self.accept()
+        )

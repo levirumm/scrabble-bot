@@ -10,7 +10,8 @@ from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
     TileSwap, LetterSelect, BotPeek, Dictionary,
-    HintMenu, GameInfo, GameOverMenu, ToastManager
+    HintMenu, GameInfo, GameOverMenu, ResignMenu, 
+    ToastManager
 )
 from pathlib import Path
 
@@ -116,6 +117,12 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
             selection = letter_select.selected_letter
 
         tile.update_letter(selection) # type: ignore
+    
+    def open_resign_dialog(self) -> bool:
+        resign_menu = ResignMenu(self)
+        result = resign_menu.exec()
+
+        return result == QDialog.DialogCode.Accepted
     
     def open_game_over_menu(
             self, game_data: GameData, resigned: bool

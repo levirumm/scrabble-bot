@@ -193,6 +193,8 @@ class TurnHistory:
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+        # Add stretch to prevent cards from expanding
+        self._ui.scroll_layout.addStretch()
 
 
 class TurnCard(QWidget, Ui_turn_card):
