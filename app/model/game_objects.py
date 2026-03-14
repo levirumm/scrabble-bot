@@ -32,6 +32,7 @@ class ScrabbleBoard:
     
     def reset(self) -> None:
         self._board: list[list[Cell]] = self._initialise_board()
+        self._is_blank = True
 
     def place_tile(self, row: int, col: int, tile: Tile) -> None:
         """Adds tile to cell and marks cell as temporarily filled."""

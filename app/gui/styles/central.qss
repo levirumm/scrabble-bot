@@ -56,6 +56,8 @@ QLabel[role="heading"] {{font-size: 20pt;}}
 
 QLabel[role="sub_heading"] {{font-size: 13pt;}}
 
+QLabel[role="sub_heading_2"] {{font-size: 16pt;}}
+
 QLabel[role="normal"] {{font-size: 11pt;}}
 
 QLabel[role="small"] {{font-size: 9pt;}}

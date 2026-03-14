@@ -64,6 +64,9 @@ class GameArea(QObject):
         self._render_button_panel()
 
         # Connect slots to button panel signals
+        self._resign_button.clicked.connect(
+            lambda: self.resignPressed.emit()
+        )
         self._skip_button.clicked.connect(self._on_skip)
         self._swap_button.clicked.connect(
             lambda: self.swapPressed.emit()
@@ -78,6 +81,10 @@ class GameArea(QObject):
         )
         self._board.tilePlaced.connect(self._tile_placed)
         self._board.tileRemoved.connect(self._tile_removed)
+    
+    def reset(self) -> None:
+        self._board.reset()
+        self._rack.reset()
     
     def set_buttons_disabled(self, disabled: bool) -> None:
         """
@@ -164,6 +171,16 @@ class BoardWidget(QWidget):
     @property
     def cells(self) -> list[list["CellWidget"]]:
         return self._cells
+
+    def reset(self) -> None:
+        """Resets tile trackers and clears cell widgets."""
+        self._pending_tiles: list[TileWidget] = []
+        self._hint_tiles: dict = {}
+
+        for row in self._cells:
+            for cell in row:
+                cell.clear_layout()
+                cell.clear()
     
     def update_pending(self) -> None:
         """Sets tiles in pending to normal style."""
@@ -534,9 +551,17 @@ class TileSlot(QFrame):
     @property
     def slot_size(self) -> int:
         return self._size
-
+    
     def set_occupied(self, is_occupied: bool) -> None:
         self._occupied = is_occupied
+
+    def clear_layout(self) -> None:
+        """Deletes any tile widgets in a cell's layout."""
+        while self._layout.count():
+            item = self._layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
     def add_tile(self, tile: TileWidget) -> None:
         """Adds tile to layout and updates tile's slot."""
@@ -666,6 +691,14 @@ class LetterRack(QObject):
 
         self._recall_button.clicked.connect(self.recall)
     
+    def reset(self) -> None:
+        """Deletes any tiles in rack and clears references."""
+        for tile in self._tiles:
+            tile.deleteLater()
+        for slot in self._rack_slots:
+            slot.clear()
+        self._tiles: list[TileWidget] = []
+
     def recall(self) -> None:
         """Recalls all tiles on board to rack."""
         for tile in self._tiles:

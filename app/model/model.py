@@ -4,7 +4,7 @@ from app.model.types import (
     Cell, CellType, CellState, Tile, ValidationFlags, 
     ValidationResult, FormedWords, FormedWord, 
     TilePlacement, Move, MoveResult, AnchorCell,
-    CellRestriction, GameState
+    CellRestriction, GameState, GameResult, GameData
 )
 from app.model.constants import (
     BOARD_SIZE, LETTER_SCORES, RACK_SLOTS, JOKER_CHAR,
@@ -17,17 +17,11 @@ class ScrabbleModel:
     """Encapsulates game state and Scrabble rules."""
 
     def __init__(self) -> None:
-        # Default game state
-        self._players_turn: bool = True
-        self._turn: int = 0
-        self._player_points: int = 0
-        self._bot_points: int = 0
-        self._player_rack: list[Tile] = []
-        self._bot_rack: list[Tile] = []
+        self._init_default_game_state()
+
         self._board = ScrabbleBoard()
         self._letter_bag = LetterBag()
-        self._consecutive_skips: int = 0
-
+    
         # Logicall objects
         self._trie = Trie()
         self._move_processor = MoveProcessor(
@@ -70,9 +64,13 @@ class ScrabbleModel:
     @property
     def remaining_tiles(self) -> int:
         return self._letter_bag.remaining_tiles
+    
+    def reset(self) -> None:
+        self._init_default_game_state()
+        self._letter_bag.reset()
+        self._board.reset()
 
     def skip(self) -> None:
-        self._consecutive_skips += 1
         self._turn += 1
 
     def select_tiles(self, selections: int) -> list[Tile]:
@@ -87,6 +85,42 @@ class ScrabbleModel:
         )
         return not rack
 
+    def get_game_results(self, resigned: bool) -> GameData:
+        """
+        Returns the data of the game, including player and bot 
+        points and the game result (bot win, player win, tie).
+        """
+        # Get score of remaining tiles in racks
+        player_remaining_score = sum(
+            LETTER_SCORES[tile.letter] 
+            for tile in self._player_rack
+        )
+        bot_remaining_score = sum(
+            LETTER_SCORES[tile.letter] 
+            for tile in self._bot_rack
+        )
+        # Subtract remaining tile score from score (minimum of 0)
+        self._player_points = max(
+            self._player_points - player_remaining_score, 0
+        )
+        self._bot_points = max(
+            self._bot_points - bot_remaining_score, 0
+        )
+
+        # Determine winner (bot always wins if player resigned)
+        if resigned or self._player_points < self._bot_points:
+            game_result = GameResult.BOT_WIN
+        elif self._player_points == self._bot_points:
+            game_result = GameResult.TIE
+        else:
+            game_result = GameResult.PLAYER_WIN
+
+        return GameData(
+            game_result=game_result,
+            player_points=self._player_points, 
+            bot_points=self._bot_points, 
+        )
+    
     def update_rack(
             self, players: bool, new_tiles: list[Tile], 
             used_tiles: list[Tile] | None = None
@@ -179,6 +213,15 @@ class ScrabbleModel:
                 for tile in word.tiles) # type: ignore
             )
         return formed_str
+
+    def _init_default_game_state(self) -> None:
+        """Initialises variables of start of game."""
+        self._players_turn: bool = True
+        self._turn: int = 0
+        self._player_points: int = 0
+        self._bot_points: int = 0
+        self._player_rack: list[Tile] = []
+        self._bot_rack: list[Tile] = []
         
 
 class MoveProcessor:

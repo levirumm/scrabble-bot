@@ -39,6 +39,9 @@ class ScrabbleController:
         bot_tiles = self._model.bot_rack
         self._view.open_bot_peek(bot_tiles)
     
+    def _on_resign(self) -> None:
+        self._on_game_over(resigned=True)
+
     def _player_turn(self) -> None:
         self._move(TurnType.PLAYER)
 
@@ -287,9 +290,16 @@ class ScrabbleController:
             move.score, formed_str
         )
     
-    def _on_game_over(self) -> None:
-        print("game over")
-
+    def _on_game_over(self, resigned: bool = False) -> None:
+        """Opens the menu at the end of the game."""
+        game_data = self._model.get_game_results(resigned)
+        game_state = self._model.game_state
+        self._view.update_info_panel(game_state)
+        self._view.open_game_over_menu(game_data, resigned)
+        self._model.reset()
+        self._view.reset()
+        self._start_game()
+        
     def _start_game(self) -> None:
         """Set initial conditions of Scrabble game."""
         self._consective_skips: int = 0

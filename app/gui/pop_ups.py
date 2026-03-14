@@ -1,21 +1,25 @@
 from PySide6.QtWidgets import (
-    QDialog, QPushButton, QLabel, QFrame, QWidget,
+    QDialog, QPushButton, QLabel, QFrame,
     QGraphicsEffect, QGraphicsOpacityEffect
 )
 from PySide6.QtCore import (
     Qt, Signal, QEvent, QObject, QPropertyAnimation, 
-    QTimer, QPoint
+    QTimer
 )
 from PySide6.QtGui import QPixmap
 from app.gui.layout.ui_letter_select_menu import (
     Ui_letter_select
 )
-from app.model.types import Tile, ToastType
+from app.model.types import (
+    Tile, ToastType, GameData, GameResult
+)
 from app.gui.layout.ui_tile_swap import Ui_tile_swap
 from app.gui.layout.ui_bot_peek import Ui_bot_peek
 from app.gui.layout.ui_dictionary import Ui_dictionary
 from app.gui.layout.ui_hint_menu import Ui_hint_menu
 from app.gui.layout.ui_game_info import Ui_game_info
+from app.gui.layout.ui_game_over_menu import Ui_game_over_menu
+from app.gui.information_panel import ScoreBox
 from app.gui.effects import get_drop_shadow
 from app.gui.game_area import (
     TileWidget, JokerTile, TileSlot
@@ -534,3 +538,63 @@ class GameInfo(QDialog, Ui_game_info):
             "role", "double_letter"
         )
         self._shdw = style_pop_up(self, ui, modal=False)
+
+
+class GameOverMenu(QDialog, Ui_game_over_menu):
+    """Menu summarising game after game ends."""
+    def __init__(
+            self, parent, game_data: GameData, 
+            resigned: bool
+        ) -> None:
+        super().__init__(parent)
+        ui = Ui_game_over_menu()
+        ui.setupUi(self)
+
+        self._render_window(ui, game_data, resigned)
+    
+    def _render_window(
+            self, ui: Ui_game_over_menu, game_data: GameData, 
+            resigned: bool
+        ) -> None:
+        self._shdw = style_pop_up(self, ui, modal=True)
+
+        # Winner message
+        result = game_data.game_result
+        message = (
+            "You Won" if result == GameResult.PLAYER_WIN 
+            else "Scrabble Bot Won" if result == GameResult.BOT_WIN
+            else "Tie"
+        )
+        ui.title.setText(message)
+        ui.title.setProperty("role", "sub_heading_2")
+        
+        # Resigned message
+        if resigned:
+            ui.resign_message.setText("You resigned")
+            ui.resign_message.setProperty("role", "normal")
+            ui.resign_message.setProperty("variant", "muted")
+
+        # Player score box
+        player_score_box = ScoreBox("You", player=True)
+        player_score_box.update_score(game_data.player_points)
+
+        # Bot score box
+        bot_score_box = ScoreBox(
+            "Scrabble Bot", player=False, align_right=True
+        )
+        bot_score_box.update_score(game_data.bot_points)
+        ui.player_score_layout.addWidget(player_score_box)
+        ui.bot_score_layout.addWidget(bot_score_box)
+
+        ui.line.setProperty("role", "line")
+
+        # Rematch button
+        ui.rematch_button.setProperty("role", "button")
+        ui.rematch_button.clicked.connect(lambda: self.accept())
+    
+    def reject(self) -> None:
+        """
+        Overrides reject method to prevent user escaping 
+        without selecting letter.
+        """
+        pass 

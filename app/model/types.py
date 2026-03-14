@@ -24,6 +24,12 @@ class ToastType(Enum):
     INFO = "info"
 
 
+class GameResult(Enum):
+    PLAYER_WIN = auto()
+    BOT_WIN = auto()
+    TIE = auto()
+
+
 class TurnType(Enum):
     PLAYER = auto()
     BOT = auto()
@@ -36,6 +42,13 @@ class GameState:
     bot_points: int
     remaining_tiles: int
     turn: int
+
+
+@dataclass
+class GameData:
+    game_result: GameResult
+    player_points: int
+    bot_points: int
 
 
 @dataclass

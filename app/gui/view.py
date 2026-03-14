@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QDialog
 from PySide6.QtCore import QObject, QPoint
 from app.gui.layout.ui_scrabble_view import Ui_ScrabbleView
 from app.model.types import (
-    CellType, GameState, Tile, ToastType
+    CellType, GameState, Tile, ToastType, GameData
 )
 from app.gui.palette.palette import PALETTE
 from app.gui.button_console import ButtonConsole
@@ -10,7 +10,7 @@ from app.gui.game_area import GameArea
 from app.gui.information_panel import InfoPanel
 from app.gui.pop_ups import (
     TileSwap, LetterSelect, BotPeek, Dictionary,
-    HintMenu, GameInfo, ToastManager
+    HintMenu, GameInfo, GameOverMenu, ToastManager
 )
 from pathlib import Path
 
@@ -59,6 +59,10 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
     @property
     def button_console(self) -> ButtonConsole:
         return self._button_console
+
+    def reset(self) -> None:
+        self._game_area.reset()
+        self._info_panel.reset()
     
     def show_toast(
             self, message: str, toast_type: ToastType
@@ -113,6 +117,12 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
 
         tile.update_letter(selection) # type: ignore
     
+    def open_game_over_menu(
+            self, game_data: GameData, resigned: bool
+        ) -> None:
+        game_over_menu = GameOverMenu(self, game_data, resigned)
+        game_over_menu.exec()
+    
     def update_info_panel(self, game_state: GameState) -> None:
         """Updates info panel to represent current game state."""
         self._info_panel.update(game_state)
@@ -132,32 +142,22 @@ class ScrabbleView(QWidget, Ui_ScrabbleView):
         self._button_console.set_buttons_disabled(disable)
     
     def connect_to_controller(self, controller):
-            # Connect slots to button panel
+        """Connects view slots to the controller."""
+        # Connect slots to button panel
+        self._game_area.resignPressed.connect(controller._on_resign)
         self._game_area.skipPressed.connect(controller._on_skip)
         self.game_area.swapPressed.connect(controller._on_swap)
         self.game_area.submitPressed.connect(controller._player_turn)
 
         # Connect slots to game events
-        self.game_area.tilePlaced.connect(
-            controller._on_tile_placed
-        )
-        self.game_area.tileRemoved.connect(
-            controller._on_tile_removed
-        )
+        self.game_area.tilePlaced.connect(controller._on_tile_placed)
+        self.game_area.tileRemoved.connect(controller._on_tile_removed)
 
         # Connect slots to button console
-        self.button_console.infoPressed.connect(
-            self.open_game_info
-        )
-        self.button_console.dictPressed.connect(
-            self.open_dictionary
-        )
-        self.button_console.peekPressed.connect(
-            controller._see_bot_rack
-        )
-        self.button_console.hintPressed.connect(
-            controller._get_hint
-        )
+        self.button_console.infoPressed.connect(self.open_game_info)
+        self.button_console.dictPressed.connect(self.open_dictionary)
+        self.button_console.peekPressed.connect(controller._see_bot_rack)
+        self.button_console.hintPressed.connect(controller._get_hint)
 
     def _load_qss(self) -> str:
         """

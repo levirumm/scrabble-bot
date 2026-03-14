@@ -34,6 +34,9 @@ class InfoPanel:
         self._tile_tracker = self._render_tile_tracker()
         self._turn_history = TurnHistory(self._ui)
     
+    def reset(self) -> None:
+        self._turn_history.reset()
+
     def update(self, game_state: GameState) -> None:
         # Update score board
         self._score_board.update(
@@ -180,10 +183,16 @@ class TurnHistory:
         ) -> None:
         turn_card = TurnCard(
             name,  player, turn, formed_words, points
-          
         )
         # Insert to top of scroll area
         self._ui.scroll_layout.insertWidget(0, turn_card)
+    
+    def reset(self) -> None:
+        while self._ui.scroll_layout.count():
+            item = self._ui.scroll_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
 
 
 class TurnCard(QWidget, Ui_turn_card):
